@@ -1,0 +1,61 @@
+// Protobuf definitions for the encryption metadata.
+//
+// This .proto file declares the types of the encryption metadata that will be
+// serialized along with the data. The main message is `Metadata`, which points
+// to the `KeyDerivationMeta` and `EncryptionMeta` messages, which hold various
+// info for each operation.
+//
+// Each algorithm choice is defined as an enum and is currently required. This
+// is not supported by the `proto3` syntax, so we use the `*_INVALID` name
+// to mark undefined choices. Because the names of the enum variants should be
+// globally unique, they are prepended with the name of the enum.
+//
+// This proto file should pass the lint checks of Uber's `prototool`:
+// https://github.com/uber/prototool
+
+syntax = "proto3";
+
+package metadata;
+
+option go_package = "metadatapb";
+option java_package = "com.metadata";
+option java_multiple_files = true;
+option java_outer_classname = "MetadataProto";
+
+enum HashFunction {
+    HASH_FUNCTION_INVALID = 0;
+    HASH_FUNCTION_SHA256 = 1;
+    HASH_FUNCTION_SHA384 = 2;
+    HASH_FUNCTION_SHA512 = 3;
+    HASH_FUNCTION_SHA512_256 = 4;
+}
+
+enum KeyDerivationAlgorithm {
+    KEY_DERIVATION_ALGORITHM_INVALID = 0;
+    KEY_DERIVATION_ALGORITHM_NONE = 1;
+    KEY_DERIVATION_ALGORITHM_PBKDF2 = 2;
+}
+
+enum EncryptionAlgorithm {
+    ENCRYPTION_ALGORITHM_INVALID = 0;
+    ENCRYPTION_ALGORITHM_AES256GCM = 1;
+    ENCRYPTION_ALGORITHM_CHACHA20_POLY1305 = 2;
+}
+
+message KeyDerivationMetadata {
+    KeyDerivationAlgorithm algo = 1;
+    HashFunction hash_fn = 2;
+    uint64 iterations = 3;
+    bytes salt = 4;
+}
+
+message EncryptionMetadata {
+    EncryptionAlgorithm algo = 1;
+    bytes nonce = 2;
+}
+
+message Metadata {
+    KeyDerivationMetadata key_deriv_meta = 1;
+    EncryptionMetadata enc_meta = 2;
+    uint64 ciphertext_size = 3;
+}
