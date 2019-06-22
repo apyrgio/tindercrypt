@@ -4,3 +4,10 @@ version = "0.1.0"
 authors = ["Alex Pyrgiotis <apyrgio@gmail.com>"]
 edition = "2018"
 license = "MPL-2.0"
+
+[build-dependencies]
+protoc-rust = { version = "2.7.*", optional = true }
+
+[features]
+# Generate Rust code from .proto files.
+proto-gen = ["protoc-rust"]
