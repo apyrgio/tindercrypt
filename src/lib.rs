@@ -35,3 +35,6 @@
     unused_results,
     variant_size_differences
 )]
+
+#[path = "../proto/mod.rs"]
+pub mod proto;
