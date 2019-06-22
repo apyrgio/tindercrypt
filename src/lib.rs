@@ -38,3 +38,4 @@
 
 #[path = "../proto/mod.rs"]
 pub mod proto;
+pub mod rand;
