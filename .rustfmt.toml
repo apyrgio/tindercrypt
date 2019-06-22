@@ -1,0 +1,14 @@
+format_strings = false
+report_todo = "Always"
+report_fixme = "Always"
+edition = "2018"
+wrap_comments = true
+
+# The default character limit is 100 chars per line, but a lot of people don't
+# have screens that support 200+ chars, i.e., screens over 14". Note that "200+"
+# is not a typo, since it's common that a developer may want to split the screen
+# in two, e.g., two Vim panes, or one editor window and a browser window. So,
+# since 100 chars is too long, we follow the PEP 8 recommendation, i.e., 79
+# chars, which seems to work fine in practice.
+max_width = 79
+comment_width = 79
