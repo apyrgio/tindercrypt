@@ -8,6 +8,9 @@ license = "MPL-2.0"
 [dependencies]
 protobuf = "2.7.*"
 rand = "0.6"
+# There are no stable versions of ring, meaning that we must always compile the
+# newest version to ensure that the latest security patches are there.
+ring = "*"
 
 [build-dependencies]
 protoc-rust = { version = "2.7.*", optional = true }

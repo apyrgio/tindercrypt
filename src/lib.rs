@@ -14,10 +14,14 @@
 //! bundles them with the encrypted data, so that it can retrieve them when
 //! decrypting the data later on.
 //!
+//! You can learn how Tindercrypt handles encryption metadata in the
+//! [`metadata`] module.
+//!
 //! [AES256-GCM]: https://en.wikipedia.org/wiki/Galois/Counter_Mode
 //! [ChaCha20-Poly1305]: https://tools.ietf.org/html/rfc7539
 //! [PBKDF2]: https://en.wikipedia.org/wiki/PBKDF2
 //! [Ring]: https://github.com/briansmith/ring
+//! [`metadata`]: metadata/index.html
 
 #![deny(
     warnings,
@@ -36,6 +40,8 @@
     variant_size_differences
 )]
 
+pub mod errors;
+pub mod metadata;
 #[path = "../proto/mod.rs"]
 pub mod proto;
 pub mod rand;
