@@ -42,6 +42,7 @@
 
 pub mod errors;
 pub mod metadata;
+pub mod pbkdf2;
 #[path = "../proto/mod.rs"]
 pub mod proto;
 pub mod rand;
