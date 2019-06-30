@@ -40,6 +40,7 @@
     variant_size_differences
 )]
 
+pub mod aead;
 pub mod errors;
 pub mod metadata;
 pub mod pbkdf2;
