@@ -41,6 +41,7 @@
 )]
 
 pub mod aead;
+pub mod cryptors;
 pub mod errors;
 pub mod metadata;
 pub mod pbkdf2;

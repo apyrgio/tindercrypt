@@ -1,7 +1,8 @@
 //! # AEAD helpers
 //!
 //! This module contains some wrappers over the AEAD functions in the `ring`
-//! library.
+//! library. You are advised to not use these low-level functions directly, and
+//! instead use the functions provided by the [`cryptors`] module
 //!
 //! ## Examples
 //!
@@ -39,6 +40,8 @@
 //! drop(nonce);
 //!
 //! ```
+//!
+//! [`cryptors`]: ../cryptors/index.html
 
 use crate::errors;
 use ring::aead;
