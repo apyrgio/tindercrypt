@@ -11,6 +11,16 @@ rand = "0.6"
 # There are no stable versions of ring, meaning that we must always compile the
 # newest version to ensure that the latest security patches are there.
 ring = "*"
+# NOTE: The following dependencies are required only for the CLI version of the
+# crate.
+clap = "2.33.*"
+dialoguer = "0.4.*"
+lazy_static = "1.3.*"
+
+[dev-dependencies]
+assert_cmd = "0.11.*"
+assert_fs = "0.11.*"
+predicates = "1.0.*"
 
 [build-dependencies]
 protoc-rust = { version = "2.7.*", optional = true }
