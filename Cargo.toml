@@ -4,6 +4,16 @@ version = "0.1.0"
 authors = ["Alex Pyrgiotis <apyrgio@gmail.com>"]
 edition = "2018"
 license = "MPL-2.0"
+description = """
+Data encryption with symmetric cryptographic keys or passwords/passphrases,
+and self-contained encryption metadata"
+"""
+homepage = "https://github.com/apyrgio/tindercrypt"
+repository = "https://github.com/apyrgio/tindercrypt"
+documentation = "https://github.com/apyrgio/tindercrypt"
+readme = "README.md"
+keywords = ["protocol-buffers", "cryptorgraphy", "encryption"]
+categories = ["command-line-utilities", "cryptography"]
 
 [dependencies]
 protobuf = "2.7.*"
