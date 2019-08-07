@@ -8,9 +8,14 @@ license = "MPL-2.0"
 [dependencies]
 protobuf = "2.7.*"
 rand = "0.6"
-# There are no stable versions of ring, meaning that we must always compile the
-# newest version to ensure that the latest security patches are there.
-ring = "*"
+# XXX: There are no stable versions of `ring` [1], meaning that we must always
+# compile the newest version to ensure that the latest security patches are
+# there. However, this means that our library may break whenever `ring` changes
+# its API. We'll pin the `ring` version for now, but we have to find a way to
+# deal with this at some point.
+#
+# [1]: https://github.com/briansmith/ring#versioning--stability
+ring = "0.14.*"
 # NOTE: The following dependencies are required only for the CLI version of the
 # crate.
 clap = "2.33.*"
