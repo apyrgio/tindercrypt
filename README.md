@@ -29,8 +29,7 @@ Features:
   buffers].
 * No book-keeping necessary by the user; all required metadata for
   the decryption are bundled with the ciphertext.
-* Offers a simple, multi-platform CLI tool that encrypts files with a
-  passphrase.
+* Offers a simple CLI tool that encrypts files with a passphrase.
 
 For a design overview, see the docs section on [Tindercrypt metadata].
 

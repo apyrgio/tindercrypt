@@ -173,7 +173,7 @@ you're writing FOSS [11]. Your project's shelf life contests that of beer.
 ### Who are the Tindercrypt contributors?
 
 A common way to log the contributors of a project is to add themselves to an
-`AUTHORS`` file or to the copyright header of the file they contribute to.
+`AUTHORS` file or to the copyright header of the file they contribute to.
 However, this info can easily go out of sync or encourage anti-patterns [12]
 [13] so, again, git to the rescue:
 
@@ -297,7 +297,7 @@ project contributors collectively, as stated in [`NOTICE.md`]. This is
 cumbersome, but not catastrophic. Other than that, they are effectively the
 same.
 
-It would seem that we don't actually need to add the legal notice of [`NOTICE.md`]`
+It would seem that we don't actually need to add the legal notice of [`NOTICE.md`]
 to every file in this repo, which is much more sane from a maintenance poin-
 **NOT SO FAST, PARTNER!**
 
