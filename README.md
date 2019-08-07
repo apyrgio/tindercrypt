@@ -5,6 +5,9 @@ passwords/passphrases. Uses [Protocol Buffers] for the serialization of the
 encryption metadata (salts, nonces, etc.) and is based on the [ring] Rust crate
 for the cryptographic primitives.
 
+[![Crates.io](https://img.shields.io/crates/v/tindercrypt.svg)](https://crates.io/crates/tindercrypt)
+[![Docs.rs](https://docs.rs/tindercrypt/badge.svg)](https://docs.rs/tindercrypt)
+
 ## Overview
 
 Tindercrypt's main goal is to provide a safe and easy API for data
@@ -29,6 +32,8 @@ Features:
 * Offers a simple, multi-platform CLI tool that encrypts files with a
   passphrase.
 
+For a design overview, see the docs section on [Tindercrypt metadata].
+
 ## Examples
 
 You can encrypt (seal) a data buffer with a passphrase as follows:
@@ -45,6 +50,8 @@ let plaintext2 = cryptor.open(pass, &ciphertext)?;
 assert_eq!(plaintext2, plaintext);
 ```
 
+You can find more examples in the docs section on [Tindercrypt's `RingCryptor`].
+
 The equivalent operation in the CLI tool is the following:
 
 ```
@@ -55,7 +62,14 @@ $ tindercrypt decrypt -i ciphertext
 The cake is a lie
 ```
 
+## Documentation
+
+You can read the latest docs in https://docs.rs/tindercrypt.
+
 ## Installation
+
+You can run Tindercrypt using one of the binaries in the [Releases page] of this
+repo. Alternatively, you can install it with one of the following methods:
 
 * From cargo:
 
@@ -94,15 +108,17 @@ Finally, read the [`NOTICE.md`] file for the legal status of the project.
 Licensed under MPL-2.0. Please read the [`NOTICE.md`] and [`LICENSE`] files for
 the full copyright and license information. If you feel like putting your
 mental stability to a test, feel free to read the [`LEGAL.md`] file for a foray
-into the waters of copyright law, and a glimpse of how they can be boring and
-dangerous at the same time.
+into the waters of copyright law, and a glimpse of how they can be both boring
+and dangerous at the same time.
 
 [ring]: https://github.com/briansmith/ring
-<!--[protobuf]: https://github.com/stepancheg/rust-protobuf-->
 [Protocol Buffers]: https://developers.google.com/protocol-buffers/
 [PBKDF2]: https://en.wikipedia.org/wiki/PBKDF2
 [AES256-GCM]: https://en.wikipedia.org/wiki/Galois/Counter_Mode
 [ChaCha20-Poly1305]: https://tools.ietf.org/html/rfc7539
+[Tindercrypt metadata]: https://docs.rs/tindercrypt/latest/tindercrypt/metadata/index.html
+[Tindercrypt's `RingCryptor`]: https://docs.rs/tindercrypt/latest/tindercrypt/cryptors/struct.RingCryptor.html
+[Releases page]: https://github.com/apyrgio/tindercrypt/releases
 [`prototool`]: https://github.com/uber/prototool
 [`NOTICE.md`]: /NOTICE.md
 [`LICENSE`]: /LICENSE

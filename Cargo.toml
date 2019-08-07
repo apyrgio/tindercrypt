@@ -10,7 +10,7 @@ and self-contained encryption metadata"
 """
 homepage = "https://github.com/apyrgio/tindercrypt"
 repository = "https://github.com/apyrgio/tindercrypt"
-documentation = "https://github.com/apyrgio/tindercrypt"
+documentation = "https://docs.rs/tindercrypt"
 readme = "README.md"
 keywords = ["protocol-buffers", "cryptorgraphy", "encryption"]
 categories = ["command-line-utilities", "cryptography"]
