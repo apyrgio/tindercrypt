@@ -361,7 +361,7 @@ fn create_decrypt_parser<'a, 'b>() -> App<'a, 'b> {
                 .long("in-file")
                 .takes_value(true)
                 .help(
-                    "The name of the file to be decrypt. If left blank, \
+                    "The name of the file to be decrypted. If left blank, \
                      the file will be read from stdin",
                 ),
         )
