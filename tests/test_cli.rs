@@ -1,8 +1,7 @@
-use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use predicates::prelude::*;
 
-use std::process::Command;
+use assert_cmd::Command;
 
 fn cli() -> Command {
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
@@ -44,8 +43,7 @@ fn test_encrypt_decrypt() {
     // Test that encryption/decryption works properly with stdin/stdout.
     let output = encrypt()
         .args(&["-e", "CHACHA20-POLY1305"])
-        .with_stdin()
-        .buffer("secret")
+        .write_stdin("secret")
         .assert()
         .success()
         .get_output()
@@ -53,16 +51,14 @@ fn test_encrypt_decrypt() {
         .clone();
 
     decrypt()
-        .with_stdin()
-        .buffer(output.clone())
+        .write_stdin(output.clone())
         .assert()
         .success()
         .stdout("secret");
 
     // Test that invalid ciphertexts return the appropriate error.
     decrypt()
-        .with_stdin()
-        .buffer("secret")
+        .write_stdin("secret")
         .assert()
         .failure()
         .stderr(predicate::str::starts_with("Error during decryption"))
@@ -71,8 +67,7 @@ fn test_encrypt_decrypt() {
     // Test that a wrong password results to an error.
     decrypt()
         .env("TINDERCRYPT_PASSPHRASE", "wrongpass")
-        .with_stdin()
-        .buffer(output.clone())
+        .write_stdin(output.clone())
         .assert()
         .failure()
         .stderr(predicate::str::starts_with("Error during decryption"))
