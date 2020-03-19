@@ -111,13 +111,20 @@ pub fn seal_in_place(
     _check_in_out(algo, in_out)?;
 
     let tag_size = algo.tag_len();
-    let key = aead::SealingKey::new(algo, key).unwrap();
+    let plaintext_size: usize = in_out.len() - tag_size;
+    let plaintext = &mut in_out[..plaintext_size];
+    let unbound_key = aead::UnboundKey::new(algo, key).unwrap();
+    let key = aead::LessSafeKey::new(unbound_key);
     let nonce = aead::Nonce::assume_unique_for_key(nonce);
     let aad = aead::Aad::from(aad);
-    let res = aead::seal_in_place(&key, nonce, aad, in_out, tag_size);
+    let res = key.seal_in_place_separate_tag(nonce, aad, plaintext);
 
     match res {
-        Ok(size) => Ok(size - tag_size),
+        Ok(t) => {
+            let tag = &mut in_out[plaintext_size..];
+            tag.copy_from_slice(t.as_ref());
+            Ok(plaintext_size)
+        }
         Err(error) => panic!("Error during sealing: {:?}", error),
     }
 }
@@ -152,10 +159,11 @@ pub fn open_in_place(
     _check_key(algo, key)?;
     _check_in_out(algo, in_out)?;
 
-    let key = aead::OpeningKey::new(algo, key).unwrap();
+    let unbound_key = aead::UnboundKey::new(algo, key).unwrap();
+    let key = aead::LessSafeKey::new(unbound_key);
     let nonce = aead::Nonce::assume_unique_for_key(nonce);
     let aad = aead::Aad::from(aad);
-    let res = aead::open_in_place(&key, nonce, aad, 0, in_out);
+    let res = key.open_in_place(nonce, aad, in_out);
 
     match res {
         Ok(plaintext) => Ok(plaintext.len()),
