@@ -26,7 +26,6 @@
 )]
 
 use std::io::{self, Read, Write};
-use std::os::unix::fs::OpenOptionsExt;
 use std::{env, fmt, fs};
 
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
@@ -37,6 +36,9 @@ extern crate lazy_static;
 extern crate clap;
 
 use tindercrypt::{cryptors, errors, metadata};
+
+#[cfg(target_family = "unix")]
+use std::os::unix::fs::OpenOptionsExt;
 
 const PASSPHRASE_ENVVAR: &'static str = "TINDERCRYPT_PASSPHRASE";
 const AES_ALGO: &'static str = "AES256-GCM";
@@ -147,13 +149,22 @@ fn _read_stdin() -> Result<Vec<u8>, CLIError> {
 ///
 /// The file will be created with read-write rights by the owner only.
 fn _write_file(name: &str, buf: &[u8]) -> Result<(), CLIError> {
-    let file = fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .open(name);
+    // Construct the options necessary to create a file that is read-writable
+    // by the owner only. Note that this concept does not apply to Windows [1],
+    // so we protect it via a conditional compilation guard.
+    //
+    // [1] The official docs do not explain how another user can access a file
+    //     upon creation, so I suppose that they simply can't, unless the file
+    //     is created in a directory with special permissions. This is
+    //     reinforced by this Sentry commit:
+    //
+    //     https://github.com/getsentry/sentry-cli/pull/296/commits/e0494ae47832501c66088dab761dc1c73c7de9bc
+    let mut open_opts = fs::OpenOptions::new();
+    let _ = open_opts.write(true).create_new(true);
+    #[cfg(target_family = "unix")]
+    let _ = open_opts.mode(0o600);
 
-    let mut file = match file {
+    let mut file = match open_opts.open(name) {
         Ok(f) => f,
         Err(e) => {
             return Err(CLIError::from_io_error(
