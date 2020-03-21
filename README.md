@@ -86,21 +86,10 @@ $ ./target/release/tindercrypt --help
 Tindecrypt: File encryption tool ...
 ```
 
-## Development
+## Contributing
 
-Clone this repo, make changes to the code and ensure that the tests pass:
-
-```
-$ cargo test
-```
-
-For changes in the `.proto` file, do the following:
-
-* Check if the `.proto` file passes the lint checks of Uber's [`prototool`].
-* Compile the `.proto` file with `cargo build --features proto-gen`.
-* Commit the generated Rust code.
-
-Finally, read the [`NOTICE.md`] file for the legal status of the project.
+You can read the [`CONTRIBUTING.md`] guide for more info on how to contribute to
+this project.
 
 ## Legal
 
@@ -118,7 +107,7 @@ and dangerous at the same time.
 [Tindercrypt metadata]: https://docs.rs/tindercrypt/latest/tindercrypt/metadata/index.html
 [Tindercrypt's `RingCryptor`]: https://docs.rs/tindercrypt/latest/tindercrypt/cryptors/struct.RingCryptor.html
 [Releases page]: https://github.com/apyrgio/tindercrypt/releases
-[`prototool`]: https://github.com/uber/prototool
-[`NOTICE.md`]: /NOTICE.md
-[`LICENSE`]: /LICENSE
-[`LEGAL.md`]: /LEGAL.md
+[`CONTRIBUTING.md`]: CONTRIBUTING.md
+[`NOTICE.md`]: NOTICE.md
+[`LICENSE`]: LICENSE
+[`LEGAL.md`]: LEGAL.md
