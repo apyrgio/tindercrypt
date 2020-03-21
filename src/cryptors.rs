@@ -233,7 +233,7 @@ impl<'a> RingCryptor<'a> {
         secret: &[u8],
         key: &mut [u8],
     ) -> Result<(), errors::Error> {
-        let algo: &'static ring::digest::Algorithm;
+        let algo: ring::pbkdf2::Algorithm;
 
         match key_deriv_algo {
             metadata::KeyDerivationAlgorithm::None => {
@@ -247,11 +247,14 @@ impl<'a> RingCryptor<'a> {
             }
             metadata::KeyDerivationAlgorithm::PBKDF2(meta) => {
                 algo = match meta.hash_fn {
-                    metadata::HashFunction::SHA256 => &ring::digest::SHA256,
-                    metadata::HashFunction::SHA384 => &ring::digest::SHA384,
-                    metadata::HashFunction::SHA512 => &ring::digest::SHA512,
-                    metadata::HashFunction::SHA512_256 => {
-                        &ring::digest::SHA512_256
+                    metadata::HashFunction::SHA256 => {
+                        ring::pbkdf2::PBKDF2_HMAC_SHA256
+                    }
+                    metadata::HashFunction::SHA384 => {
+                        ring::pbkdf2::PBKDF2_HMAC_SHA384
+                    }
+                    metadata::HashFunction::SHA512 => {
+                        ring::pbkdf2::PBKDF2_HMAC_SHA512
                     }
                 };
                 pbkdf2::derive_key(

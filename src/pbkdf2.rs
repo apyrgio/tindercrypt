@@ -4,7 +4,7 @@
 
 use crate::errors;
 use core::num;
-use ring::{digest, pbkdf2};
+use ring::pbkdf2;
 
 /// Cryptographically create a symmetric key from a secret value.
 ///
@@ -22,9 +22,9 @@ use ring::{digest, pbkdf2};
 /// ```
 /// use tindercrypt::pbkdf2::derive_key;
 /// use tindercrypt::rand::fill_buf;
-/// use ring::digest;
+/// use ring::pbkdf2;
 ///
-/// let digest_algo = &digest::SHA256;
+/// let digest_algo = pbkdf2::PBKDF2_HMAC_SHA256;
 /// let iterations = 100000;
 /// let mut salt = [0u8; 32];
 /// let secret = "My secret password".as_bytes();
@@ -34,13 +34,16 @@ use ring::{digest, pbkdf2};
 /// derive_key(digest_algo, iterations, &salt, &secret, &mut key);
 /// ```
 pub fn derive_key(
-    digest_algo: &'static digest::Algorithm,
+    digest_algo: pbkdf2::Algorithm,
     iterations: usize,
     salt: &[u8],
     secret: &[u8],
     key: &mut [u8],
 ) -> Result<(), errors::Error> {
-    if digest_algo == &digest::SHA1 || iterations < 1 || salt.len() == 0 {
+    if digest_algo == pbkdf2::PBKDF2_HMAC_SHA1
+        || iterations < 1
+        || salt.len() == 0
+    {
         return Err(errors::Error::CryptoParamsWeak);
     }
 
@@ -70,30 +73,63 @@ mod tests {
         let size_err = Err(errors::Error::PassphraseTooSmall);
 
         // Check that weak parameters and empty buffers are reported as errors.
-        res = derive_key(&digest::SHA1, 1, &salt, &secret, &mut key1);
+        res =
+            derive_key(pbkdf2::PBKDF2_HMAC_SHA1, 1, &salt, &secret, &mut key1);
         assert_eq!(res, params_err);
-        res = derive_key(&digest::SHA256, 0, &salt, &secret, &mut key1);
+        res = derive_key(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            0,
+            &salt,
+            &secret,
+            &mut key1,
+        );
         assert_eq!(res, params_err);
-        res = derive_key(&digest::SHA256, 1, &[], &secret, &mut key1);
+        res =
+            derive_key(pbkdf2::PBKDF2_HMAC_SHA256, 1, &[], &secret, &mut key1);
         assert_eq!(res, params_err);
-        res = derive_key(&digest::SHA256, 1, &salt, &[], &mut key1);
+        res = derive_key(pbkdf2::PBKDF2_HMAC_SHA256, 1, &salt, &[], &mut key1);
         assert_eq!(res, size_err);
-        res = derive_key(&digest::SHA256, 1, &salt, &secret, &mut []);
+        res =
+            derive_key(pbkdf2::PBKDF2_HMAC_SHA256, 1, &salt, &secret, &mut []);
         assert_eq!(res, size_err);
 
         // Check that key derivation works, and that changes in the salt and
         // secret produce different keys.
-        res = derive_key(&digest::SHA256, 1, &salt, &secret, &mut key1);
+        res = derive_key(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            1,
+            &salt,
+            &secret,
+            &mut key1,
+        );
         assert!(res.is_ok());
         salt[0] = 0;
-        res = derive_key(&digest::SHA256, 1, &salt, &secret, &mut key2);
+        res = derive_key(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            1,
+            &salt,
+            &secret,
+            &mut key2,
+        );
         assert!(res.is_ok());
         salt[0] = 9;
         secret[0] = 0;
-        res = derive_key(&digest::SHA256, 1, &salt, &secret, &mut key3);
+        res = derive_key(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            1,
+            &salt,
+            &secret,
+            &mut key3,
+        );
         assert!(res.is_ok());
         secret[0] = 99;
-        res = derive_key(&digest::SHA256, 1, &salt, &secret, &mut key4);
+        res = derive_key(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            1,
+            &salt,
+            &secret,
+            &mut key4,
+        );
         assert!(res.is_ok());
 
         assert_ne!(key1, key2);

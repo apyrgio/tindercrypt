@@ -27,7 +27,6 @@ enum HashFunction {
     HASH_FUNCTION_SHA256 = 1;
     HASH_FUNCTION_SHA384 = 2;
     HASH_FUNCTION_SHA512 = 3;
-    HASH_FUNCTION_SHA512_256 = 4;
 }
 
 enum KeyDerivationAlgorithm {

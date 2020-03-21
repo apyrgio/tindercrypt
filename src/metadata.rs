@@ -142,7 +142,6 @@ pub enum HashFunction {
     SHA256,
     SHA384,
     SHA512,
-    SHA512_256,
 }
 
 impl HashFunction {
@@ -166,9 +165,6 @@ impl HashFunction {
             pmeta::HashFunction::HASH_FUNCTION_SHA512 => {
                 Ok(HashFunction::SHA512)
             }
-            pmeta::HashFunction::HASH_FUNCTION_SHA512_256 => {
-                Ok(HashFunction::SHA512_256)
-            }
         }
     }
 
@@ -178,9 +174,6 @@ impl HashFunction {
             HashFunction::SHA256 => pmeta::HashFunction::HASH_FUNCTION_SHA256,
             HashFunction::SHA384 => pmeta::HashFunction::HASH_FUNCTION_SHA384,
             HashFunction::SHA512 => pmeta::HashFunction::HASH_FUNCTION_SHA512,
-            HashFunction::SHA512_256 => {
-                pmeta::HashFunction::HASH_FUNCTION_SHA512_256
-            }
         }
     }
 }
