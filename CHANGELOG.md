@@ -7,6 +7,29 @@ Versioning].
 
 ## [Unreleased]
 
+### Added
+
+- Add Windows support.
+- Add a CI pipeline based on Github Actions. This pipeline tests the project
+  on Ubuntu, MacOS and Windows platforms, and creates build artifacts for them.
+
+### Changed
+
+- Bump the dependencies to their newest versions.
+
+### Fixed
+
+- Fix some build warnings, that were ultimately treated as errors, by
+  updating `protoc-rust` and generating new Rust code from our `.proto` files.
+  These build warnings started to appear due to new versions of `rustc`.
+
+### Removed
+
+- Remove support for the `HMAC-SHA512/256` hash function, used in conjunction
+  with PBKDF2 for key derivation. This hash function was removed by the `ring`
+  library, so we're left with no choice but to remove it from Tindercrypt it as
+  well.
+
 ## [0.1.1] - 2019-08-10
 
 Version bump so that the Github tag and crates.io tag can be aligned.
