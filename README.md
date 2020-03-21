@@ -5,6 +5,7 @@ passwords/passphrases. Uses [Protocol Buffers] for the serialization of the
 encryption metadata (salts, nonces, etc.) and is based on the [ring] Rust crate
 for the cryptographic primitives.
 
+[![CI](https://github.com/apyrgio/tindercrypt/workflows/CI/badge.svg?branch=master&event=schedule)](https://github.com/apyrgio/tindercrypt/actions?query=event%3Aschedule+branch%3Amaster)
 [![Crates.io](https://img.shields.io/crates/v/tindercrypt.svg)](https://crates.io/crates/tindercrypt)
 [![Docs.rs](https://docs.rs/tindercrypt/badge.svg)](https://docs.rs/tindercrypt)
 
@@ -67,8 +68,9 @@ You can read the latest docs in https://docs.rs/tindercrypt.
 
 ## Installation
 
-You can run Tindercrypt using one of the binaries in the [Releases page] of this
-repo. Alternatively, you can install it with one of the following methods:
+You can run Tindercrypt using one of the binaries of the [stable releases], or
+the [nightly builds]. Alternatively, you can install it with one of the
+following methods:
 
 * From cargo:
 
@@ -106,7 +108,8 @@ and dangerous at the same time.
 [ChaCha20-Poly1305]: https://tools.ietf.org/html/rfc7539
 [Tindercrypt metadata]: https://docs.rs/tindercrypt/latest/tindercrypt/metadata/index.html
 [Tindercrypt's `RingCryptor`]: https://docs.rs/tindercrypt/latest/tindercrypt/cryptors/struct.RingCryptor.html
-[Releases page]: https://github.com/apyrgio/tindercrypt/releases
+[stable releases]: https://github.com/apyrgio/tindercrypt/releases
+[nightly builds]: https://github.com/apyrgio/tindercrypt/actions?query=event%3Aschedule+branch%3Amaster
 [`CONTRIBUTING.md`]: CONTRIBUTING.md
 [`NOTICE.md`]: NOTICE.md
 [`LICENSE`]: LICENSE
