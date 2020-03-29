@@ -66,7 +66,19 @@ The cake is a lie
 
 You can read the latest docs in https://docs.rs/tindercrypt.
 
-## Installation
+## Usage
+
+### As a library
+
+When adding this crate to your `Cargo.toml`, add it with `default-features =
+false`, to ensure that CLI specific dependencies are not added to your
+dependency tree:
+
+```toml
+tindercrypt = { version = "x.y.z", default-features = false }
+```
+
+### As a binary
 
 You can run Tindercrypt using one of the binaries of the [stable releases], or
 the [nightly builds]. Alternatively, you can install it with one of the
