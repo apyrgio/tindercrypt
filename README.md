@@ -52,6 +52,8 @@ assert_eq!(plaintext2, plaintext);
 
 You can find more examples in the docs section on [Tindercrypt's `RingCryptor`].
 
+When adding this crate to your `Cargo.toml`, add it with `default-features = false` (eg, `tindercrypt = { version = "x.y.z", default-features = false }`). This will ensure that the CLI specific dependencies are not added to your dependency tree.
+
 The equivalent operation in the CLI tool is the following:
 
 ```
