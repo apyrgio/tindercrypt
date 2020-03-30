@@ -7,6 +7,11 @@ Versioning].
 
 ## [Unreleased]
 
+### Changed
+
+- Move the CLI dependencies under a `cli` feature flag, so that users of the
+  library don't need to pull them.
+
 ## [0.2.0] - 2020-03-22
 
 ### Added
