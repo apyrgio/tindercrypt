@@ -53,7 +53,7 @@ lazy_static! {
         )
     };
     static ref PBKDF2_DEFAULT_ITERATIONS: String =
-        { metadata::PBKDF2_DEFAULT_ITERATIONS.to_string() };
+        metadata::PBKDF2_DEFAULT_ITERATIONS.to_string();
 }
 
 #[derive(Debug)]
