@@ -11,15 +11,12 @@ use protoc_rust;
 // updated, since this function unconditionally creates it.
 #[cfg(feature = "proto-gen")]
 fn proto_gen() {
-    protoc_rust::run(protoc_rust::Args {
-        out_dir: "proto/",
-        input: &["proto/metadata.proto"],
-        includes: &["."],
-        customize: protoc_rust::Customize {
-            ..Default::default()
-        },
-    })
-    .expect("Error during generation of Rust code from .proto files");
+    protoc_rust::Codegen::new()
+        .out_dir("proto/")
+        .inputs(&["proto/metadata.proto"])
+        .include(".")
+        .run()
+        .expect("Error during generation of Rust code from .proto files");
 }
 
 fn main() {
