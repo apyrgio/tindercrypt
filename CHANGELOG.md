@@ -7,6 +7,11 @@ Versioning].
 
 ## [Unreleased]
 
+### Changed
+
+- Use the `thiserror` crate to make the library errors implement the `Error`
+  trait, and remove some boilerplate code.
+
 ## [0.2.1] - 2020-03-30
 
 ### Changed

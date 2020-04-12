@@ -1,55 +1,33 @@
 //! # Tindercrypt errors
 
-use std::fmt;
+use thiserror;
 
 /// The errors that can be returned by the library.
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(thiserror::Error, Copy, Clone, Debug, PartialEq)]
 pub enum Error {
     /// The provided data buffer is too small for the requested action.
+    #[error("The provided buffer is shorter than expected")]
     BufferTooSmall,
     /// The provided passphrase is too small for the key derivation process.
+    #[error("The provided passphrase is shorter than expected")]
     PassphraseTooSmall,
     /// The provided key size was not the expected one.
+    #[error(
+        "The provided key does not have the required length for the \
+         encryption algorithm"
+    )]
     KeySizeMismatch,
     /// The provided parameters to a crypto function are weak.
+    #[error("The provided parameters for the encryption are too weak")]
     CryptoParamsWeak,
     /// Could not decrypt the data, e.g., due to a bad key, wrong nonce,
     /// corrupted tag.
+    #[error("Could not decrypt the ciphertext")]
     DecryptionError,
     /// The provided buffer does not start with the expected metadata header.
+    #[error("The provided buffer does not include a metadata header")]
     MetadataMissing,
     /// The metadata header of the encrypted buffer contains invalid values.
+    #[error("The provided buffer has an invalid metadata header")]
     MetadataInvalid,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::BufferTooSmall => {
-                write!(f, "The provided buffer is shorter than expected")
-            }
-            Error::PassphraseTooSmall => {
-                write!(f, "The provided passphrase is shorter than expected")
-            }
-            Error::KeySizeMismatch => write!(
-                f,
-                "The provided key does not have the required length for the \
-                 encryption algorithm"
-            ),
-            Error::CryptoParamsWeak => write!(
-                f,
-                "The provided parameters for the encryption are too weak"
-            ),
-            Error::DecryptionError => {
-                write!(f, "Could not decrypt the ciphertext")
-            }
-            Error::MetadataMissing => write!(
-                f,
-                "The provided buffer does not include a metadata header"
-            ),
-            Error::MetadataInvalid => {
-                write!(f, "The provided buffer has an invalid metadata header")
-            }
-        }
-    }
 }
