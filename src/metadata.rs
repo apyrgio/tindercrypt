@@ -389,7 +389,7 @@ impl EncryptionMetadata {
 pub enum EncryptionAlgorithm {
     /// The AES-256-GCM AEAD.
     AES256GCM(EncryptionMetadata),
-    /// The ChaCha20-Poly1405 AEAD.
+    /// The ChaCha20-Poly1305 AEAD.
     ChaCha20Poly1305(EncryptionMetadata),
 }
 
