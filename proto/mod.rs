@@ -4,4 +4,5 @@
 //! of the encryption metadata. This code has been generated from protobuf
 //! definitions in the `proto/` folder of the project.
 
+#[rustfmt::skip]
 pub mod metadata;
