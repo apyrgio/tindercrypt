@@ -158,9 +158,22 @@ impl<'a> RingCryptor<'a> {
         Self { aad }
     }
 
-    /// Get the proper key size from the metadata.
-    fn _get_key_size(&self, meta: &metadata::Metadata) -> usize {
-        match meta.enc_algo {
+    /// Get the proper key size for the encryption algorithm.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tindercrypt::metadata;
+    /// use tindercrypt::cryptors::RingCryptor;
+    ///
+    /// let enc_meta = metadata::EncryptionMetadata::generate();
+    /// let enc_algo = metadata::EncryptionAlgorithm::ChaCha20Poly1305(enc_meta);
+    ///
+    /// // The ChaCha20 cipher requires a 256-bit key.
+    /// assert_eq!(RingCryptor::get_key_size(&enc_algo), 32);
+    /// ```
+    pub fn get_key_size(enc_algo: &metadata::EncryptionAlgorithm) -> usize {
+        match enc_algo {
             metadata::EncryptionAlgorithm::AES256GCM(_) => {
                 ring::aead::AES_256_GCM.key_len()
             }
@@ -289,7 +302,7 @@ impl<'a> RingCryptor<'a> {
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
         let mut key = [0u8; MAX_KEY_SIZE];
-        let mut key = &mut key[..self._get_key_size(meta)];
+        let mut key = &mut key[..Self::get_key_size(&meta.enc_algo)];
 
         self._derive_key(&meta.key_deriv_algo, secret, &mut key)?;
         self._seal_in_place(&meta.enc_algo, &key, buf)
@@ -374,7 +387,7 @@ impl<'a> RingCryptor<'a> {
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
         let mut key = [0u8; MAX_KEY_SIZE];
-        let mut key = &mut key[..self._get_key_size(meta)];
+        let mut key = &mut key[..Self::get_key_size(&meta.enc_algo)];
 
         self._derive_key(&meta.key_deriv_algo, secret, &mut key)?;
         self._open_in_place(&meta.enc_algo, &key, buf)
