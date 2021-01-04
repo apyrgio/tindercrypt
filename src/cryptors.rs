@@ -183,6 +183,36 @@ impl<'a> RingCryptor<'a> {
         }
     }
 
+    /// Verify that the key size matches the encryption algorithm.
+    ///
+    /// Keys of different size will fail verification with
+    /// [`errors::Error::KeySizeMismatch`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tindercrypt::metadata;
+    /// use tindercrypt::errors::Error;
+    /// use tindercrypt::cryptors::RingCryptor;
+    ///
+    /// let enc_meta = metadata::EncryptionMetadata::generate();
+    /// let enc_algo = metadata::EncryptionAlgorithm::ChaCha20Poly1305(enc_meta);
+    ///
+    /// // The ChaCha20 cipher requires a 256-bit key.
+    /// let key = vec![9u8; 32];
+    /// assert_eq!(RingCryptor::verify_key_size(&enc_algo, &[]), Err(Error::KeySizeMismatch));
+    /// assert_eq!(RingCryptor::verify_key_size(&enc_algo, &key), Ok(()));
+    /// ```
+    pub fn verify_key_size(
+        enc_algo: &metadata::EncryptionAlgorithm,
+        key: &[u8],
+    ) -> Result<(), errors::Error> {
+        if key.len() != Self::get_key_size(enc_algo) {
+            return Err(errors::Error::KeySizeMismatch);
+        }
+        Ok(())
+    }
+
     /// Encrypt (seal) the data buffer in place.
     ///
     /// This method gets the metadata necessary from the `EncryptionAlgorithm`
@@ -193,6 +223,7 @@ impl<'a> RingCryptor<'a> {
         key: &[u8],
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
+        Self::verify_key_size(enc_algo, key)?;
         let algo: &'static ring::aead::Algorithm;
         let nonce: [u8; aead::NONCE_SIZE];
 
@@ -219,6 +250,7 @@ impl<'a> RingCryptor<'a> {
         key: &[u8],
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
+        Self::verify_key_size(enc_algo, key)?;
         let algo: &'static ring::aead::Algorithm;
         let nonce: [u8; aead::NONCE_SIZE];
 
