@@ -213,6 +213,20 @@ impl<'a> RingCryptor<'a> {
         Ok(())
     }
 
+    fn _get_enc_info(
+        &self,
+        enc_algo: &metadata::EncryptionAlgorithm,
+    ) -> (&'static ring::aead::Algorithm, [u8; aead::NONCE_SIZE]) {
+        match enc_algo {
+            metadata::EncryptionAlgorithm::AES256GCM(meta) => {
+                (&ring::aead::AES_256_GCM, meta.nonce)
+            }
+            metadata::EncryptionAlgorithm::ChaCha20Poly1305(meta) => {
+                (&ring::aead::CHACHA20_POLY1305, meta.nonce)
+            }
+        }
+    }
+
     /// Encrypt (seal) the data buffer in place.
     ///
     /// This method gets the metadata necessary from the `EncryptionAlgorithm`
@@ -224,19 +238,7 @@ impl<'a> RingCryptor<'a> {
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
         Self::verify_key_size(enc_algo, key)?;
-        let algo: &'static ring::aead::Algorithm;
-        let nonce: [u8; aead::NONCE_SIZE];
-
-        match enc_algo {
-            metadata::EncryptionAlgorithm::AES256GCM(meta) => {
-                algo = &ring::aead::AES_256_GCM;
-                nonce = meta.nonce;
-            }
-            metadata::EncryptionAlgorithm::ChaCha20Poly1305(meta) => {
-                algo = &ring::aead::CHACHA20_POLY1305;
-                nonce = meta.nonce;
-            }
-        }
+        let (algo, nonce) = self._get_enc_info(enc_algo);
         aead::seal_in_place(algo, nonce, self.aad, key, buf)
     }
 
@@ -252,18 +254,7 @@ impl<'a> RingCryptor<'a> {
     ) -> Result<usize, errors::Error> {
         Self::verify_key_size(enc_algo, key)?;
         let algo: &'static ring::aead::Algorithm;
-        let nonce: [u8; aead::NONCE_SIZE];
-
-        match enc_algo {
-            metadata::EncryptionAlgorithm::AES256GCM(meta) => {
-                algo = &ring::aead::AES_256_GCM;
-                nonce = meta.nonce;
-            }
-            metadata::EncryptionAlgorithm::ChaCha20Poly1305(meta) => {
-                algo = &ring::aead::CHACHA20_POLY1305;
-                nonce = meta.nonce;
-            }
-        }
+        let (algo, nonce) = self._get_enc_info(enc_algo);
         aead::open_in_place(algo, nonce, self.aad, key, buf)
     }
 
