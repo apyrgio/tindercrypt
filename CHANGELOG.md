@@ -7,6 +7,10 @@ Versioning].
 
 ## [Unreleased]
 
+### Added
+
+- Allow users to derive a key from a secret value and the encryption metadata.
+
 ## [0.2.2] - 2020-04-13
 
 ### Changed

@@ -227,6 +227,68 @@ impl<'a> RingCryptor<'a> {
         }
     }
 
+    /// Derive a key from the provided secret and metadata, with no allocation.
+    ///
+    /// This function is useful for those that want to manage the key buffer
+    /// themselves, either for performance or security reasons.
+    ///
+    /// Depending on the key derivation algorithm in the metadata, this
+    /// function will derive a key from `secret` and store it into `key`. If
+    /// the key derivation algorithm is
+    /// [`metadata::KeyDerivationAlgorithm::None`], then the `secret` will just
+    /// be copied to `key`.
+    ///
+    /// If the key buffer does not match the required key size, this function
+    /// will return an error (see [`RingCryptor::verify_key_size`]).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tindercrypt::metadata;
+    /// use tindercrypt::errors::Error;
+    /// use tindercrypt::cryptors::RingCryptor;
+    ///
+    /// let meta = metadata::Metadata::generate_for_passphrase(0);
+    ///
+    /// let pass = "My secret passphrase".as_bytes();
+    /// let mut key = [0u8; 32];
+    ///
+    /// assert_eq!(RingCryptor::derive_key_no_alloc(&meta, &pass, &mut key), Ok(()));
+    /// ```
+    pub fn derive_key_no_alloc(
+        meta: &metadata::Metadata,
+        secret: &[u8],
+        key: &mut [u8],
+    ) -> Result<(), errors::Error> {
+        Self::verify_key_size(&meta.enc_algo, key)?;
+        match meta.key_deriv_algo {
+            metadata::KeyDerivationAlgorithm::None => {
+                Self::verify_key_size(&meta.enc_algo, secret)?;
+                key.copy_from_slice(secret);
+            }
+            metadata::KeyDerivationAlgorithm::PBKDF2(meta) => {
+                let algo = match meta.hash_fn {
+                    metadata::HashFunction::SHA256 => {
+                        ring::pbkdf2::PBKDF2_HMAC_SHA256
+                    }
+                    metadata::HashFunction::SHA384 => {
+                        ring::pbkdf2::PBKDF2_HMAC_SHA384
+                    }
+                    metadata::HashFunction::SHA512 => {
+                        ring::pbkdf2::PBKDF2_HMAC_SHA512
+                    }
+                };
+                pbkdf2::derive_key(
+                    algo,
+                    meta.iterations,
+                    &meta.salt,
+                    secret,
+                    key,
+                )?;
+            }
+        };
+        Ok(())
+    }
     /// Encrypt (seal) the data buffer in place.
     ///
     /// This method gets the metadata necessary from the `EncryptionAlgorithm`
@@ -253,54 +315,8 @@ impl<'a> RingCryptor<'a> {
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
         Self::verify_key_size(enc_algo, key)?;
-        let algo: &'static ring::aead::Algorithm;
         let (algo, nonce) = self._get_enc_info(enc_algo);
         aead::open_in_place(algo, nonce, self.aad, key, buf)
-    }
-
-    /// Create a symmetric key from a secret value.
-    ///
-    /// This method gets the metadata necessary from the
-    /// `KeyDerivationAlgorithm` enum and calls the respective PBKDF2 wrapper.
-    fn _derive_key(
-        &self,
-        key_deriv_algo: &metadata::KeyDerivationAlgorithm,
-        secret: &[u8],
-        key: &mut [u8],
-    ) -> Result<(), errors::Error> {
-        let algo: ring::pbkdf2::Algorithm;
-
-        match key_deriv_algo {
-            metadata::KeyDerivationAlgorithm::None => {
-                // Ensure that the provided secret matches the expected key
-                // size, or return an appropriate error.
-                if key.len() != secret.len() {
-                    return Err(errors::Error::KeySizeMismatch);
-                }
-                key.copy_from_slice(secret);
-                Ok(())
-            }
-            metadata::KeyDerivationAlgorithm::PBKDF2(meta) => {
-                algo = match meta.hash_fn {
-                    metadata::HashFunction::SHA256 => {
-                        ring::pbkdf2::PBKDF2_HMAC_SHA256
-                    }
-                    metadata::HashFunction::SHA384 => {
-                        ring::pbkdf2::PBKDF2_HMAC_SHA384
-                    }
-                    metadata::HashFunction::SHA512 => {
-                        ring::pbkdf2::PBKDF2_HMAC_SHA512
-                    }
-                };
-                pbkdf2::derive_key(
-                    algo,
-                    meta.iterations,
-                    &meta.salt,
-                    secret,
-                    key,
-                )
-            }
-        }
     }
 
     /// Encrypt (seal) the data buffer in place.
@@ -327,7 +343,7 @@ impl<'a> RingCryptor<'a> {
         let mut key = [0u8; MAX_KEY_SIZE];
         let mut key = &mut key[..Self::get_key_size(&meta.enc_algo)];
 
-        self._derive_key(&meta.key_deriv_algo, secret, &mut key)?;
+        Self::derive_key_no_alloc(&meta, secret, &mut key)?;
         self._seal_in_place(&meta.enc_algo, &key, buf)
     }
 
@@ -412,7 +428,7 @@ impl<'a> RingCryptor<'a> {
         let mut key = [0u8; MAX_KEY_SIZE];
         let mut key = &mut key[..Self::get_key_size(&meta.enc_algo)];
 
-        self._derive_key(&meta.key_deriv_algo, secret, &mut key)?;
+        Self::derive_key_no_alloc(&meta, secret, &mut key)?;
         self._open_in_place(&meta.enc_algo, &key, buf)
     }
 
@@ -501,6 +517,47 @@ mod tests {
         };
 
         metadata::Metadata::new(key_algo, enc_algo, size)
+    }
+
+    #[test]
+    fn test_derive_key() {
+        let key_err = Err(errors::Error::KeySizeMismatch);
+        let pass_err = Err(errors::Error::PassphraseTooSmall);
+
+        // Test 1 - No key derivation.
+        //
+        // Ensure that wrong key sizes are rejected. Also, check that the
+        // provided secret gets copied to the key as is.
+        let meta = metadata::Metadata::generate_for_key(0);
+        let key_size = RingCryptor::get_key_size(&meta.enc_algo);
+        let secret = vec![9u8; key_size];
+        let mut key = vec![0u8; key_size];
+
+        let res = RingCryptor::derive_key_no_alloc(&meta, &[], &mut key);
+        assert_eq!(res, key_err);
+        let res = RingCryptor::derive_key_no_alloc(&meta, &secret, &mut []);
+        assert_eq!(res, key_err);
+        let res = RingCryptor::derive_key_no_alloc(&meta, &secret, &mut key);
+        assert_eq!(res, Ok(()));
+        assert_eq!(secret, key);
+
+        // Test 2 - PBKDF2 key derivation.
+        //
+        // Ensure that wrong key sizes are rejected. Also, check that the
+        // derived key does not match the secret and is not empty.
+        let meta = metadata::Metadata::generate_for_passphrase(0);
+        let key_size = RingCryptor::get_key_size(&meta.enc_algo);
+        let secret = vec![9u8; key_size];
+        let mut key = vec![0u8; key_size];
+
+        let res = RingCryptor::derive_key_no_alloc(&meta, &secret, &mut []);
+        assert_eq!(res, key_err);
+        let res = RingCryptor::derive_key_no_alloc(&meta, &[], &mut key);
+        assert_eq!(res, pass_err);
+        let res = RingCryptor::derive_key_no_alloc(&meta, &secret, &mut key);
+        assert_eq!(res, Ok(()));
+        assert!(key != secret);
+        assert!(key != vec![0u8; key_size]);
     }
 
     #[test]
