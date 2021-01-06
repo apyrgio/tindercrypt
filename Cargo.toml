@@ -27,6 +27,7 @@ rand = "0.7"
 # [1]: https://github.com/briansmith/ring#versioning--stability
 ring = "0.16"
 thiserror = "1"
+zeroize = "1"
 
 # NOTE: The following dependencies are required only for the CLI version of the
 # crate, and are only included if the `cli` feature is enabled. See also

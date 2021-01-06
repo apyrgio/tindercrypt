@@ -12,6 +12,7 @@ use crate::errors;
 use crate::metadata;
 use crate::pbkdf2;
 use ring;
+use zeroize;
 
 /// The maximum key size that the `ring` library supports for encryption
 /// purposes.
@@ -289,6 +290,43 @@ impl<'a> RingCryptor<'a> {
         };
         Ok(())
     }
+
+    /// Derive a key from the provided secret and metadata.
+    ///
+    /// This function is useful for those that want an easy and safe way to
+    /// derive a key. Compared to [`RingCryptor::derive_key_no_alloc`], it:
+    ///
+    /// * Allocates and returns a key buffer with the proper size.
+    /// * Ensures that the key will be safely erased from memory after use,
+    ///   with the help of the [`zeroize`] crate.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tindercrypt::metadata;
+    /// use tindercrypt::errors::Error;
+    /// use tindercrypt::cryptors::RingCryptor;
+    ///
+    /// let meta = metadata::Metadata::generate_for_passphrase(0);
+    ///
+    /// let pass = "My secret passphrase".as_bytes();
+    /// let key = RingCryptor::derive_key(&meta, &pass)?;
+    ///
+    /// # use tindercrypt::errors;
+    /// # Ok::<(), errors::Error>(())
+    /// ```
+    ///
+    /// [`zeroize`]: https://docs.rs/zeroize
+    pub fn derive_key(
+        meta: &metadata::Metadata,
+        secret: &[u8],
+    ) -> Result<zeroize::Zeroizing<Vec<u8>>, errors::Error> {
+        let key_size = Self::get_key_size(&meta.enc_algo);
+        let mut key = zeroize::Zeroizing::new(vec![0u8; key_size]);
+        Self::derive_key_no_alloc(meta, secret, &mut key)?;
+        Ok(key)
+    }
+
     /// Encrypt (seal) the data buffer in place.
     ///
     /// This method gets the metadata necessary from the `EncryptionAlgorithm`
