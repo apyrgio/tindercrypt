@@ -14,10 +14,6 @@ use crate::pbkdf2;
 use ring;
 use zeroize;
 
-/// The maximum key size that the `ring` library supports for encryption
-/// purposes.
-const MAX_KEY_SIZE: usize = 32;
-
 /// A cryptor that uses cryptographic primitives from the `ring` crate.
 ///
 /// If a user wants to encrypt a plaintext, they can use one of the `.seal_*`
@@ -87,11 +83,17 @@ const MAX_KEY_SIZE: usize = 32;
 /// let mut buf = &mut _buf[meta_size..];
 /// buf[..plaintext.len()].copy_from_slice(plaintext);
 ///
+/// // The user should derive the key from the passphrase.
+/// let key = RingCryptor::derive_key(&meta, pass)?;
+///
 /// // These methods will not perform any allocation, and will encrypt/decrypt
 /// // the data in place.
-/// cryptor.seal_in_place(&meta, pass, buf);
-/// cryptor.open_in_place(&meta, pass, buf);
+/// cryptor.seal_in_place(&meta, &key, buf)?;
+/// cryptor.open_in_place(&meta, &key, buf)?;
 /// assert_eq!(&buf[..plaintext.len()], plaintext);
+///
+/// # use tindercrypt::errors;
+/// # Ok::<(), errors::Error>(())
 /// ```
 ///
 /// The user is also free to specify their own metadata for the encryption
@@ -123,8 +125,11 @@ const MAX_KEY_SIZE: usize = 32;
 /// let (mut buf, meta_size) = meta.to_buf();
 /// buf[meta_size..meta_size + plaintext.len()].copy_from_slice(&plaintext);
 ///
+/// // Derive the key from the passphrase.
+/// let key = RingCryptor::derive_key(&meta, pass)?;
+///
 /// // Encrypt and decrypt the data.
-/// let ciphertext = cryptor.seal_with_meta(&meta, pass, &mut buf[meta_size..])?;
+/// let ciphertext = cryptor.seal_with_meta(&meta, &key, &mut buf[meta_size..])?;
 /// assert_eq!(cryptor.open(pass, &ciphertext)?, plaintext);
 ///
 /// # use tindercrypt::errors;
@@ -359,44 +364,38 @@ impl<'a> RingCryptor<'a> {
 
     /// Encrypt (seal) the data buffer in place.
     ///
-    /// This method accepts a metadata instance, a secret value (either a key
-    /// or a passphrase) and a data buffer, that contains the plaintext and
-    /// enough space for the tag.
+    /// This method accepts a metadata instance, a key and a data buffer, that
+    /// contains the plaintext and enough space for the tag. Key derivation, if
+    /// required, must be performed by the user beforehand (see
+    /// [`RingCryptor::derive_key`]).
     ///
-    /// Depending on the key derivation algorithm, it either creates a
-    /// symmetric key from the secret value, or uses the secret value as a key.
-    /// Then, it seals the data in place, using the encryption algorithm
-    /// specified in the metadata.
-    ///
-    /// This method is much faster than the `seal_with_*` methods that this
-    /// cryptor provides, since it doesn't perform any allocations. The
-    /// drawback is that the plaintext is not preserved and that the user must
-    /// create the proper buffer layout beforehand.
+    /// This method seals the data in place, using the encryption algorithm
+    /// specified in the metadata. It is much faster than the `seal_with_*`
+    /// methods that this cryptor provides, since it doesn't perform any
+    /// allocations. The drawback is that the plaintext is not preserved and
+    /// that the user must create the proper buffer layout beforehand.
     pub fn seal_in_place(
         &self,
         meta: &metadata::Metadata,
-        secret: &[u8],
+        key: &[u8],
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
-        let mut key = [0u8; MAX_KEY_SIZE];
-        let mut key = &mut key[..Self::get_key_size(&meta.enc_algo)];
-
-        Self::derive_key_no_alloc(&meta, secret, &mut key)?;
         self._seal_in_place(&meta.enc_algo, &key, buf)
     }
 
     /// Encrypt (seal) the data buffer using the provided metadata.
     ///
-    /// This method accepts a metadata instance, a secret value (either a key
-    /// or a passphrase) and the plaintext.
+    /// This method accepts a metadata instance, a key and the plaintext. Key
+    /// derivation, if required, must be performed by the user beforehand (see
+    /// [`RingCryptor::derive_key`]).
     ///
-    /// It serializes the metadata instance to a buffer, copies the
+    /// This method serializes the metadata instance to a buffer, copies the
     /// plaintext in it and then seals it in place. This way, the plaintext is
     /// preserved, at the cost of an extra copy.
     pub fn seal_with_meta(
         &self,
         meta: &metadata::Metadata,
-        secret: &[u8],
+        key: &[u8],
         plaintext: &[u8],
     ) -> Result<Vec<u8>, errors::Error> {
         // FIXME: Do we need so many `mut` here?
@@ -404,7 +403,7 @@ impl<'a> RingCryptor<'a> {
         let mut ciphertext = &mut buf[meta_size..];
 
         ciphertext[..plaintext.len()].copy_from_slice(plaintext);
-        let _ = self.seal_in_place(meta, secret, &mut ciphertext)?;
+        let _ = self.seal_in_place(meta, key, &mut ciphertext)?;
         Ok(buf)
     }
 
@@ -431,8 +430,9 @@ impl<'a> RingCryptor<'a> {
     /// plaintext.
     ///
     /// It generates a metadata instance with the proper key derivation
-    /// algorithm and then uses the `.seal_with_meta()` method to seal the
-    /// data. The plaintext will be preserved, at the cost of an extra copy.
+    /// algorithm, derives the key from the passphrase, and then uses the
+    /// `.seal_with_meta()` method to seal the data. The plaintext will be
+    /// preserved, at the cost of an extra copy.
     pub fn seal_with_passphrase(
         &self,
         pass: &[u8],
@@ -440,52 +440,47 @@ impl<'a> RingCryptor<'a> {
     ) -> Result<Vec<u8>, errors::Error> {
         let meta =
             metadata::Metadata::generate_for_passphrase(plaintext.len());
-        self.seal_with_meta(&meta, pass, plaintext)
+        let key = Self::derive_key(&meta, pass)?;
+        self.seal_with_meta(&meta, &key, plaintext)
     }
 
     /// Decrypt (open) the data buffer in place.
     ///
-    /// This method accepts a metadata instance, a secret value (either a key
-    /// or a passphrase) and a data buffer, that contains the ciphertext and
-    /// its tag.
+    /// This method accepts a metadata instance, a key and a data buffer, that
+    /// contains the plaintext and enough space for the tag. Key derivation, if
+    /// required, must be performed by the user beforehand (see
+    /// [`RingCryptor::derive_key`]).
     ///
-    /// Depending on the key derivation algorithm, it either creates a
-    /// symmetric key from the secret value, or uses the secret value as a key.
-    /// Then, it opens the data in place, using the encryption algorithm
-    /// specified in the metadata.
-    ///
-    /// This method is much faster than the other `open*` methods that this
-    /// cryptor provides, since it doesn't perform any allocations. The
-    /// drawback is that the ciphertext is not preserved.
+    /// This method opens the data in place, using the encryption algorithm
+    /// specified in the metadata. It is much faster than the other `open*`
+    /// methods that this cryptor provides, since it doesn't perform any
+    /// allocations. The drawback is that the ciphertext is not preserved.
     pub fn open_in_place(
         &self,
         meta: &metadata::Metadata,
-        secret: &[u8],
+        key: &[u8],
         buf: &mut [u8],
     ) -> Result<usize, errors::Error> {
-        let mut key = [0u8; MAX_KEY_SIZE];
-        let mut key = &mut key[..Self::get_key_size(&meta.enc_algo)];
-
-        Self::derive_key_no_alloc(&meta, secret, &mut key)?;
         self._open_in_place(&meta.enc_algo, &key, buf)
     }
 
     /// Decrypt (open) the data buffer using the provided metadata.
     ///
-    /// This method accepts a metadata instance, a secret value (either a key
-    /// or a passphrase) and the ciphertext.
+    /// This method accepts a metadata instance, a key and the ciphertext. Key
+    /// derivation, if required, must be performed by the user beforehand (see
+    /// [`RingCryptor::derive_key`]).
     ///
-    /// It copies the ciphertext to a new buffer and decrypts (opens) it in
-    /// place. Then, it returns the buffer with the plaintext. This way, the
-    /// ciphertext is preserved, at the cost of an extra copy.
+    /// This method copies the ciphertext to a new buffer and decrypts (opens)
+    /// it in place. Then, it returns the buffer with the plaintext. This way,
+    /// the ciphertext is preserved, at the cost of an extra copy.
     pub fn open_with_meta(
         &self,
         meta: &metadata::Metadata,
-        secret: &[u8],
+        key: &[u8],
         ciphertext: &[u8],
     ) -> Result<Vec<u8>, errors::Error> {
         let mut buf = ciphertext.to_vec();
-        let size = self.open_in_place(meta, secret, &mut buf)?;
+        let size = self.open_in_place(meta, key, &mut buf)?;
         let _ = buf.drain(size..);
         Ok(buf)
     }
@@ -496,8 +491,11 @@ impl<'a> RingCryptor<'a> {
     /// a data buffer that contains the serialized metadata and the ciphertext.
     ///
     /// It deserializes the metadata and extracts the ciphertext from the
-    /// buffer. Then, it uses `.open_with_meta()` to decrypt the ciphertext.
-    /// The buffer will be preserved, at the cost of an extra copy.
+    /// buffer. Depending on the key derivation algorithm, this method may
+    /// derive a key from the provided passpphrase using the values in the
+    /// deserialized metadata. Then, it uses `.open_with_meta()` to decrypt the
+    /// ciphertext.  The buffer will be preserved, at the cost of an extra
+    /// copy.
     pub fn open(
         &self,
         secret: &[u8],
@@ -505,7 +503,8 @@ impl<'a> RingCryptor<'a> {
     ) -> Result<Vec<u8>, errors::Error> {
         let (meta, meta_size) = metadata::Metadata::from_buf(buf)?;
         let ciphertext = &buf[meta_size..];
-        self.open_with_meta(&meta, secret, ciphertext)
+        let key = Self::derive_key(&meta, secret)?;
+        self.open_with_meta(&meta, &key, ciphertext)
     }
 }
 
@@ -607,7 +606,6 @@ mod tests {
         let buf_err = Err(errors::Error::BufferTooSmall);
         let dec_err = Err(errors::Error::DecryptionError);
         let key_err = Err(errors::Error::KeySizeMismatch);
-        let pass_err = Err(errors::Error::PassphraseTooSmall);
 
         // Create two cryptors, one with additional associated data and one
         // without.
@@ -619,7 +617,10 @@ mod tests {
         // PBKDF2 key derivation and AES-256-GCM encryption, with passphrase.
         let meta1 =
             generate_meta(plaintext.len(), KeyOpts::PBKDF2, EncOpts::AES);
-        let key1 = "My passphrase 1".as_bytes();
+        let secret1 = "My passphrase 1".as_bytes();
+        let key_size = RingCryptor::get_key_size(&meta1.enc_algo);
+        let mut key1 = vec![0u8; key_size];
+        RingCryptor::derive_key_no_alloc(&meta1, &secret1, &mut key1).unwrap();
 
         // PBKDF2 key derivation and ChaCha20-Poly1305 encryption, with
         // passphrase.
@@ -642,30 +643,32 @@ mod tests {
         // each type of user mistake and metadata configuration.
         //
         // No buffer.
-        for (meta, key) in
-            &[(meta1, key1), (meta2, key2), (meta3, &key3), (meta4, &key4)]
-        {
+        for (meta, key) in &[
+            (meta1, &key1),
+            (meta2, &key2),
+            (meta3, &key3),
+            (meta4, &key4),
+        ] {
             let err = cryptor.seal_in_place(&meta, key, &mut []);
             assert_eq!(buf_err, err);
         }
 
-        // No passphrase.
-        for meta in &[meta1, meta2] {
+        // Wrong key size.
+        for meta in &[meta1, meta2, meta3, meta4] {
             let err = cryptor.seal_in_place(&meta, &[], &mut []);
-            assert_eq!(pass_err, err);
-        }
-
-        // No symmetric key.
-        for meta in &[meta3, meta4] {
-            let err = cryptor.seal_in_place(&meta, &[], &mut []);
+            assert_eq!(key_err, err);
+            let err = cryptor.seal_in_place(&meta, &secret1, &mut []);
             assert_eq!(key_err, err);
         }
 
         // Test that the encryption operation succeeds.
         let mut ciphertexts = Vec::new();
-        for (meta, key) in
-            &[(meta1, key1), (meta2, key2), (meta3, &key3), (meta4, &key4)]
-        {
+        for (meta, key) in &[
+            (meta1, &key1),
+            (meta2, &key2),
+            (meta3, &key3),
+            (meta4, &key4),
+        ] {
             let (mut buf, meta_size) = meta.to_buf();
             let mut ciphertext = &mut buf[meta_size..];
             ciphertext[..plaintext.len()].copy_from_slice(plaintext);
@@ -680,36 +683,31 @@ mod tests {
         // each type of user mistake and metadata configuration.
         //
         // No buffer.
-        for (meta, key) in
-            &[(meta1, key1), (meta2, key2), (meta3, &key3), (meta4, &key4)]
-        {
+        for (meta, key) in &[
+            (meta1, &key1),
+            (meta2, &key2),
+            (meta3, &key3),
+            (meta4, &key4),
+        ] {
             let err = cryptor.open_in_place(&meta, key, &mut []);
             assert_eq!(buf_err, err);
         }
 
-        // No passphrase.
-        for meta in &[meta1, meta2] {
-            let err = cryptor.open_in_place(&meta, &[], &mut []);
-            assert_eq!(pass_err, err);
-        }
-
-        // No symmetric key.
-        for meta in &[meta3, meta4] {
+        // No key.
+        for meta in &[meta1, meta2, meta3, meta4] {
             let err = cryptor.open_in_place(&meta, &[], &mut []);
             assert_eq!(key_err, err);
         }
 
         // Test that the decryption operation returns a decryption error when
         // the keys/passphrases are wrong.
-        let wrong_key1 = "Wrong passphrase 1".as_bytes();
-        let wrong_key2 = "Wrong passphrase 2".as_bytes();
-        let wrong_key3 = vec![1u8; ring::aead::AES_256_GCM.key_len()];
-        let wrong_key4 = vec![2u8; ring::aead::CHACHA20_POLY1305.key_len()];
+        let wrong_key1 = vec![1u8; ring::aead::AES_256_GCM.key_len()];
+        let wrong_key2 = vec![2u8; ring::aead::CHACHA20_POLY1305.key_len()];
         for (meta, wrong_key, buf) in &[
-            (meta1, wrong_key1, &ciphertexts[0]),
-            (meta2, wrong_key2, &ciphertexts[1]),
-            (meta3, &wrong_key3, &ciphertexts[2]),
-            (meta4, &wrong_key4, &ciphertexts[3]),
+            (meta1, &wrong_key1, &ciphertexts[0]),
+            (meta2, &wrong_key2, &ciphertexts[1]),
+            (meta3, &wrong_key1, &ciphertexts[2]),
+            (meta4, &wrong_key2, &ciphertexts[3]),
         ] {
             let mut buf = buf.to_vec();
             let err = cryptor.open_in_place(&meta, wrong_key, &mut buf);
@@ -719,8 +717,8 @@ mod tests {
         // Test that the decryption operation returns a decryption error when
         // the additional associated data mismatch.
         for (meta, key, buf) in &mut [
-            (meta1, key1, &ciphertexts[0]),
-            (meta2, key2, &ciphertexts[1]),
+            (meta1, &key1, &ciphertexts[0]),
+            (meta2, &key2, &ciphertexts[1]),
             (meta3, &key3, &ciphertexts[2]),
             (meta4, &key4, &ciphertexts[3]),
         ] {
@@ -732,8 +730,8 @@ mod tests {
         // Test that the decryption operation returns a decryption error when
         // the encryption algorithms are incorrect.
         for (meta, key, buf) in &[
-            (meta1, key1, &ciphertexts[1]),
-            (meta2, key2, &ciphertexts[0]),
+            (meta1, &key1, &ciphertexts[1]),
+            (meta2, &key2, &ciphertexts[0]),
             (meta3, &key3, &ciphertexts[3]),
             (meta4, &key4, &ciphertexts[2]),
         ] {
@@ -754,8 +752,8 @@ mod tests {
         let wrong_meta4 =
             generate_meta(plaintext.len(), KeyOpts::None, EncOpts::ChaCha);
         for (wrong_meta, key, buf) in &mut [
-            (wrong_meta1, key1, &ciphertexts[0]),
-            (wrong_meta2, key2, &ciphertexts[1]),
+            (wrong_meta1, &key1, &ciphertexts[0]),
+            (wrong_meta2, &key2, &ciphertexts[1]),
             (wrong_meta3, &key3, &ciphertexts[2]),
             (wrong_meta4, &key4, &ciphertexts[3]),
         ] {
@@ -766,8 +764,8 @@ mod tests {
 
         // Test a successful decryption operation.
         for (meta, key, buf) in &[
-            (meta1, key1, &ciphertexts[0]),
-            (meta2, key2, &ciphertexts[1]),
+            (meta1, &key1, &ciphertexts[0]),
+            (meta2, &key2, &ciphertexts[1]),
             (meta3, &key3, &ciphertexts[2]),
             (meta4, &key4, &ciphertexts[3]),
         ] {

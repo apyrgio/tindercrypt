@@ -263,8 +263,19 @@ fn _seal<'a>(
 
     let meta = metadata::Metadata::new(key_algo, enc_algo, buf.len());
 
+    // Derive the encryption key.
+    let key = match cryptors::RingCryptor::derive_key(&meta, &passphrase) {
+        Ok(key) => key,
+        Err(tc_error) => {
+            return Err(CLIError::from_tc_error(
+                "Unexpected error during key derivation".to_string(),
+                tc_error,
+            ))
+        }
+    };
+
     // Encrypt the plaintext with the created metadata.
-    match cryptor.seal_with_meta(&meta, passphrase, &buf) {
+    match cryptor.seal_with_meta(&meta, &key, &buf) {
         Ok(buf) => Ok(buf),
         Err(tc_error) => Err(CLIError::from_tc_error(
             "Unexpected error during encryption".to_string(),

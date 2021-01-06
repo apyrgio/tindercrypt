@@ -11,6 +11,31 @@ Versioning].
 
 - Allow users to derive a key from a secret value and the encryption metadata.
 
+### Removed
+
+- Remove the key derivation process that was performed internally in the
+  following `RingCryptor` methods:
+
+  * `seal_in_place`
+  * `seal_with_meta`
+  * `seal_with_key`
+  * `open_in_place`
+  * `open_with_meta`
+
+  The change should impact just the users that used key derivation (PBKDF2) and
+  passed a passphrase to any of the above functions. If you are affected, you
+  can manually derive the key and pass it to the above functions. For more info,
+  see the examples in the `RingCryptor` documentation.
+
+  Note that the following methods are still performing key derivation
+  internally:
+
+  * `seal_with_passphrase`
+  * `open`
+
+  Finally, the reason for the removal was not security-related, but to give more
+  control to the users on this front ([#6]).
+
 ## [0.2.2] - 2020-04-13
 
 ### Changed
@@ -60,6 +85,7 @@ Initial release.
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
+[#6]: https://github.com/apyrgio/tindercrypt/issues/6
 
 [Unreleased]: https://github.com/apyrgio/tindercrypt/compare/v0.2.2...HEAD
 [0.2.2]: https://github.com/apyrgio/tindercrypt/compare/v0.2.1...v0.2.2
