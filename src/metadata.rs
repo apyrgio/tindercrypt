@@ -543,7 +543,7 @@ impl<'a> Metadata {
         }
     }
 
-    /// Generate the necesary metadata for encrypting data with a symmetric
+    /// Generate the necessary metadata for encrypting data with a symmetric
     /// key.
     ///
     /// The default suggestion for encrypting data with a symmetric key is to
@@ -556,7 +556,7 @@ impl<'a> Metadata {
         Self::new(key_deriv_algo, enc_algo, plaintext_size)
     }
 
-    /// Generate the necesary metadata for encrypting data with a passphrase.
+    /// Generate the necessary metadata for encrypting data with a passphrase.
     ///
     /// The default suggestion for encrypting data with a passphrase is to use
     /// the PBKDF2 key derivation algorithm, and the AES-256-GCM encryption
