@@ -473,6 +473,12 @@ impl<'a> RingCryptor<'a> {
     /// This method copies the ciphertext to a new buffer and decrypts (opens)
     /// it in place. Then, it returns the buffer with the plaintext. This way,
     /// the ciphertext is preserved, at the cost of an extra copy.
+    ///
+    /// **Note:** By "ciphertext" we don't refer to the whole buffer that the
+    /// `seal_*` methods produce. We refer to the part with the encrypted
+    /// payload, which does not include the metadata. For more info on how to
+    /// extract this part, see the examples in the [`RingCryptor`]
+    /// documentation.
     pub fn open_with_meta(
         &self,
         meta: &metadata::Metadata,
