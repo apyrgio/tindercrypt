@@ -7,7 +7,6 @@
 //!
 //! [`RingCryptor`]: struct.RingCryptor.html
 
-#![allow(missing_docs)]
 use crate::aead;
 use crate::errors;
 use crate::metadata;
