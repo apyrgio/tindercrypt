@@ -403,7 +403,7 @@ impl<'a> RingCryptor<'a> {
 
     /// Decrypt (open) the data buffer.
     ///
-    /// This method accepts a a secret value (either a key or a passphrase) and
+    /// This method accepts a secret value (either a key or a passphrase) and
     /// a data buffer that contains the serialized metadata and the ciphertext.
     ///
     /// It deserializes the metadata and extracts the ciphertext from the
