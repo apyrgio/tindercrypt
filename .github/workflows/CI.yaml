@@ -83,6 +83,13 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
 
+      # Catch any breaking changes in the dependencies early, by always updating
+      # them before running the tests.
+      - name: Update dependencies
+        uses: actions-rs/cargo@v1
+        with:
+          command: update
+
       - name: Test
         uses: actions-rs/cargo@v1
         with:
