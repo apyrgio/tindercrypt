@@ -29,7 +29,7 @@ use std::io::{self, Read, Write};
 use std::{env, fmt, fs};
 
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use dialoguer::PasswordInput;
+use dialoguer::Password;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -222,7 +222,7 @@ fn get_passphrase() -> Result<String, CLIError> {
     }
 
     // If not provided, prompt the user to type it.
-    let pass = PasswordInput::new()
+    let pass = Password::new()
         .with_prompt("Enter password")
         .with_confirmation("Confirm password", "Passwords mismatch")
         .interact();
