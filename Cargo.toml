@@ -6,7 +6,7 @@ edition = "2018"
 license = "MPL-2.0"
 description = """
 Data encryption with symmetric cryptographic keys or passwords/passphrases,
-and self-contained encryption metadata"
+and self-contained encryption metadata
 """
 homepage = "https://github.com/apyrgio/tindercrypt"
 repository = "https://github.com/apyrgio/tindercrypt"
