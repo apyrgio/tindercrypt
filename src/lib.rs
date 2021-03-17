@@ -39,6 +39,9 @@
     unused_results,
     variant_size_differences
 )]
+// FIXME: This must be removed once this is solved:
+// https://github.com/stepancheg/rust-protobuf/issues/551
+#![allow(soft_unstable)]
 
 pub mod aead;
 pub mod cryptors;

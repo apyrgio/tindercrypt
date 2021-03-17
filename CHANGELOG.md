@@ -7,6 +7,16 @@ Versioning].
 
 ## [Unreleased]
 
+### Fixed
+
+- Temporarily fix a build error for nightly Rust. In a nutshell, the generated
+  Rust code for our proto files triggers a compiler warning in nightly Rust,
+  which we ultimately treat as an error. Until this is fixed upstream, we
+  silence this warning. See also:
+
+  * https://github.com/stepancheg/rust-protobuf/issues/551
+  * https://github.com/rust-lang/rust/issues/64266
+
 ## [0.3.0] - 2021-01-11
 
 ### Added
