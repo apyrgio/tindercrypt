@@ -17,6 +17,11 @@ Versioning].
   * https://github.com/stepancheg/rust-protobuf/issues/551
   * https://github.com/rust-lang/rust/issues/64266
 
+- Remove the temporary workaround for the aforementioned Rust warning, since the
+  newly generated Rust code semi-resolves it. See also:
+
+  * https://github.com/stepancheg/rust-protobuf/issues/551#issuecomment-802221146
+
 ### Changed
 
 - Bump the dialoguer dependency to v0.8.0, to fix a compilation error.
