@@ -34,7 +34,7 @@ zeroize = "1"
 # https://github.com/rust-lang/cargo/issues/1982, for the current state of
 # binary-only dependencies in `cargo`.
 clap = { version = "2", optional = true }
-dialoguer = { version = "0.7", optional = true }
+dialoguer = { version = "0.8", optional = true }
 lazy_static = { version = "1", optional = true }
 
 [dev-dependencies]

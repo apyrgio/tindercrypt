@@ -17,6 +17,10 @@ Versioning].
   * https://github.com/stepancheg/rust-protobuf/issues/551
   * https://github.com/rust-lang/rust/issues/64266
 
+### Changed
+
+- Bump the dialoguer dependency to v0.8.0, to fix a compilation error.
+
 ## [0.3.0] - 2021-01-11
 
 ### Added
