@@ -7,6 +7,12 @@ Versioning].
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix a `rustdoc::bare_urls` warning for some links that we used in our
+  footnotes and did not have any style indication, by formatting them as
+  hyperliks.
+
 ## [0.3.1] - 2021-04-20
 
 ### Fixed

@@ -90,7 +90,7 @@ use protobuf::Message;
 /// recommended size by IETF [^ietf], and because the Ring library does not
 /// accept any other size.
 ///
-/// [^ietf]: From https://tools.ietf.org/html/rfc5084#section-3.2:
+/// [^ietf]: From <https://tools.ietf.org/html/rfc5084#section-3.2>:
 ///          _A length of 12 octets is RECOMMENDED._
 pub const RING_NONCE_SIZE: usize = 12;
 
@@ -129,7 +129,7 @@ pub const PBKDF2_DEFAULT_ITERATIONS: usize = 100000;
 /// because it's generally better if the output of the HMAC function matches
 /// the length of the desired key [^pbkdf2-design-flaw].
 ///
-/// [^pbkdf2-design-flaw]: https://www.chosenplaintext.ca/2015/10/08/pbkdf2-design-flaw.html
+/// [^pbkdf2-design-flaw]: <https://www.chosenplaintext.ca/2015/10/08/pbkdf2-design-flaw.html>
 pub const PBKDF2_DEFAULT_HASH_FN: HashFunction = HashFunction::SHA256;
 
 /// The hash functions that this library supports.
