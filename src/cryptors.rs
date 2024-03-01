@@ -11,8 +11,6 @@ use crate::aead;
 use crate::errors;
 use crate::metadata;
 use crate::pbkdf2;
-use ring;
-use zeroize;
 
 /// A cryptor that uses cryptographic primitives from the `ring` crate.
 ///

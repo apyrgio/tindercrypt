@@ -1,7 +1,5 @@
 //! # Tindercrypt errors
 
-use thiserror;
-
 /// The errors that can be returned by the library.
 #[derive(thiserror::Error, Copy, Clone, Debug, PartialEq)]
 pub enum Error {
