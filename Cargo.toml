@@ -25,7 +25,7 @@ rand = "0.8"
 # deal with this at some point.
 #
 # [1]: https://github.com/briansmith/ring#versioning--stability
-ring = "0.16"
+ring = "0.17"
 thiserror = "1"
 zeroize = "1"
 
@@ -38,9 +38,9 @@ dialoguer = { version = "0.8", optional = true }
 lazy_static = { version = "1", optional = true }
 
 [dev-dependencies]
-assert_cmd = "1"
+assert_cmd = "2"
 assert_fs = "1"
-predicates = "1"
+predicates = "3"
 
 [build-dependencies]
 protoc-rust = { version = "2", optional = true }
