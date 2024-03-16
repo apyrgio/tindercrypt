@@ -46,5 +46,6 @@ pub mod errors;
 pub mod metadata;
 pub mod pbkdf2;
 #[path = "../proto/mod.rs"]
+#[allow(unused_qualifications)]
 pub mod proto;
 pub mod rand;
