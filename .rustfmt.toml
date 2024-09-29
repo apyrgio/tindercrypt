@@ -1,6 +1,4 @@
 format_strings = false
-report_todo = "Always"
-report_fixme = "Always"
 edition = "2018"
 wrap_comments = true
 
