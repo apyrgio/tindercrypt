@@ -24,21 +24,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: stable
-          override: true
           components: rustfmt
 
       - name: cargo ${{ matrix.cmd }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: ${{ matrix.cmd }}
-          args: ${{ matrix.args }}
+        run: cargo ${{ matrix.cmd }} ${{ matrix.args }}
 
 
   lint_proto:
@@ -46,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Download Uber's prototool
         run: |
@@ -74,27 +69,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Rust (${{ matrix.rust }})
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
 
       # Catch any breaking changes in the dependencies early, by always updating
       # them before running the tests.
       - name: Update dependencies
-        uses: actions-rs/cargo@v1
-        with:
-          command: update
+        run: cargo update
 
       - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: "-- --nocapture" # Allow printing the output of tests
+        run: cargo test -- --nocapture # Allow printing the output of tests
 
   build:
     name: Build on ${{ matrix.os }}
@@ -117,16 +105,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: "--release"
+        run: cargo build --release
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BINARY_NAME }}_${{ matrix.arch }}${{ matrix.extension}}
           path: "target/release/${{ env.BINARY_NAME }}${{ matrix.extension }}"
@@ -167,7 +152,7 @@ jobs:
             EOF
 
       - name: Upload release context
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: release_context
           path: release_context
@@ -189,7 +174,7 @@ jobs:
 
     steps:
       - name: Download release context
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: release_context
           path: ctx
