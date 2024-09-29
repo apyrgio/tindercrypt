@@ -272,7 +272,7 @@ impl KeyDerivationAlgorithm {
 
         // Check if the defined key derivation algorithm is invalid. If it's
         // "None", then simply return it.
-        match proto_meta.algo {
+        match proto_meta.algo.enum_value_or_default() {
             pmeta::KeyDerivationAlgorithm::KEY_DERIVATION_ALGORITHM_INVALID => {
                 return err;
             },
@@ -291,7 +291,9 @@ impl KeyDerivationAlgorithm {
         let iterations = proto_meta.iterations as usize;
 
         // Convert the hash function to the expected enum.
-        let hash_fn = HashFunction::from_proto(proto_meta.hash_fn)?;
+        let hash_fn = HashFunction::from_proto(
+            proto_meta.hash_fn.enum_value_or_default(),
+        )?;
 
         // Copy the salt to a fixed-size array. If the size is not the expected
         // one, return an error.
@@ -317,15 +319,15 @@ impl KeyDerivationAlgorithm {
 
         let meta = match self {
             KeyDerivationAlgorithm::None => {
-                proto_meta.algo = proto_none_algo;
+                proto_meta.algo = proto_none_algo.into();
                 return proto_meta;
             }
             KeyDerivationAlgorithm::PBKDF2(meta) => meta,
         };
 
-        proto_meta.algo = proto_pbkdf2_algo;
+        proto_meta.algo = proto_pbkdf2_algo.into();
         proto_meta.iterations = meta.iterations as u64;
-        proto_meta.hash_fn = meta.hash_fn.to_proto();
+        proto_meta.hash_fn = meta.hash_fn.to_proto().into();
         proto_meta.salt = meta.salt.to_vec();
         proto_meta
     }
@@ -405,7 +407,7 @@ impl EncryptionAlgorithm {
         let err = Err(errors::Error::MetadataInvalid);
 
         // Check if the defined encryption algorithm is invalid.
-        match proto_meta.algo {
+        match proto_meta.algo.enum_value_or_default() {
             pmeta::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_INVALID => {
                 return err
             }
@@ -423,7 +425,7 @@ impl EncryptionAlgorithm {
         let meta = EncryptionMetadata::new(nonce);
 
         // Return the appropriate algorithm.
-        match proto_meta.algo {
+        match proto_meta.algo.enum_value_or_default() {
             pmeta::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_INVALID => err,
             pmeta::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES256GCM => {
                 Ok(EncryptionAlgorithm::AES256GCM(meta))
@@ -445,11 +447,11 @@ impl EncryptionAlgorithm {
 
         match self {
             EncryptionAlgorithm::AES256GCM(meta) => {
-                proto_meta.algo = proto_aes_algo;
+                proto_meta.algo = proto_aes_algo.into();
                 proto_meta.nonce = meta.nonce.to_vec();
             }
             EncryptionAlgorithm::ChaCha20Poly1305(meta) => {
-                proto_meta.algo = proto_chacha_algo;
+                proto_meta.algo = proto_chacha_algo.into();
                 proto_meta.nonce = meta.nonce.to_vec();
             }
         };
@@ -579,12 +581,12 @@ impl<'a> Metadata {
         let err = Err(errors::Error::MetadataInvalid);
 
         // Parse the key derivation metadata.
-        let proto_key_meta = proto_meta.get_key_deriv_meta();
+        let proto_key_meta = proto_meta.key_deriv_meta.get_or_default();
         let key_deriv_algo =
             KeyDerivationAlgorithm::from_proto(proto_key_meta)?;
 
         // Parse the encryption metadata.
-        let proto_enc_meta = proto_meta.get_enc_meta();
+        let proto_enc_meta = proto_meta.enc_meta.get_or_default();
         let enc_algo = EncryptionAlgorithm::from_proto(proto_enc_meta)?;
 
         // Check that the ciphertext size is larger or equal to the minimum
@@ -609,9 +611,9 @@ impl<'a> Metadata {
         let mut proto_meta = pmeta::Metadata::new();
 
         let key_meta = self.key_deriv_algo.to_proto();
-        proto_meta.set_key_deriv_meta(key_meta);
+        proto_meta.key_deriv_meta = Some(key_meta).into();
         let enc_meta = self.enc_algo.to_proto();
-        proto_meta.set_enc_meta(enc_meta);
+        proto_meta.enc_meta = Some(enc_meta).into();
         proto_meta.ciphertext_size = self.ciphertext_size as u64;
 
         proto_meta
@@ -695,7 +697,7 @@ mod tests {
         // Check that converting to/from the "None" key derivation algorithm
         // works properly.
         let proto_meta = KeyDerivationAlgorithm::None.to_proto();
-        assert_eq!(proto_meta.algo, proto_none_algo);
+        assert_eq!(proto_meta.algo.enum_value_or_default(), proto_none_algo);
         assert_eq!(
             KeyDerivationAlgorithm::from_proto(&proto_meta),
             Ok(KeyDerivationAlgorithm::None)
@@ -706,7 +708,7 @@ mod tests {
         let meta = KeyDerivationMetadata::generate();
         let algo = KeyDerivationAlgorithm::PBKDF2(meta);
         let proto_meta = algo.to_proto();
-        assert_eq!(proto_meta.algo, proto_pbkdf2_algo);
+        assert_eq!(proto_meta.algo.enum_value_or_default(), proto_pbkdf2_algo);
         assert_eq!(KeyDerivationAlgorithm::from_proto(&proto_meta), Ok(algo));
 
         // Check that invalid values are detected.
@@ -717,7 +719,7 @@ mod tests {
         assert_eq!(KeyDerivationAlgorithm::from_proto(&proto_meta), err);
         // * Invalid hash function.
         let mut proto_meta = algo.to_proto();
-        proto_meta.hash_fn = pmeta::HashFunction::HASH_FUNCTION_INVALID;
+        proto_meta.hash_fn = pmeta::HashFunction::HASH_FUNCTION_INVALID.into();
         assert_eq!(KeyDerivationAlgorithm::from_proto(&proto_meta), err);
         // * Wrong salt size.
         let mut proto_meta = algo.to_proto();
@@ -747,7 +749,7 @@ mod tests {
             &[(aes_algo, proto_aes_algo), (chacha_algo, proto_chacha_algo)]
         {
             let mut proto_meta = algo.to_proto();
-            assert_eq!(proto_meta.algo, *proto_algo);
+            assert_eq!(proto_meta.algo, (*proto_algo).into());
             assert_eq!(
                 EncryptionAlgorithm::from_proto(&proto_meta),
                 Ok(algo.clone())
@@ -786,12 +788,12 @@ mod tests {
 
             // Check that invalid key derivation algorithms are detected.
             let mut proto_meta = meta.to_proto();
-            proto_meta.clear_key_deriv_meta();
+            proto_meta.key_deriv_meta.clear();
             assert_eq!(Metadata::from_proto(&proto_meta), err);
 
             // Check that invalid encryption algorithms are detected.
             let mut proto_meta = meta.to_proto();
-            proto_meta.clear_enc_meta();
+            proto_meta.enc_meta.clear();
             assert_eq!(Metadata::from_proto(&proto_meta), err);
 
             // Check that invalid ciphertext sizes are detected.
@@ -816,7 +818,7 @@ mod tests {
         assert_eq!(Metadata::from_buf(&[]), missing_err);
 
         let mut proto_meta = Metadata::generate_for_key(9).to_proto();
-        proto_meta.clear_key_deriv_meta();
+        proto_meta.key_deriv_meta.clear();
         let buf = proto_meta.write_length_delimited_to_bytes().unwrap();
         assert_eq!(Metadata::from_buf(&buf), invalid_err);
     }
