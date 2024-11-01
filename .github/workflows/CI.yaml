@@ -127,43 +127,22 @@ jobs:
     needs: ["basic_checks", "test", "build", "lint_proto"]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set release tag
         run: echo GITHUB_RELEASE_TAG=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
 
       - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ env.GITHUB_RELEASE_TAG }}
-          draft: true
-          prerelease: false
-          body: |
-            This release contains the latest assets for tag `${{ env.GITHUB_RELEASE_TAG }}`.
-
-            ## Changes
-
-            The changes for this release can be found in the [changelog].
-
-            [changelog]: https://github.com/${{ github.repository }}/blob/${{ env.GITHUB_RELEASE_TAG }}/CHANGELOG.md
-
-      - name: Store release context
         run: |
-            cat <<EOF > release_context
-            ::set-output name=ref::${{ env.GITHUB_RELEASE_TAG }}
-            ::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}
-            EOF
-
-      - name: Upload release context
-        uses: actions/upload-artifact@v4
-        with:
-          name: release_context
-          path: release_context
+          gh release create ${{ env.GITHUB_RELEASE_TAG }} \
+              --title "Release ${{ env.GITHUB_RELEASE_TAG }}" \
+              --draft --generate-notes
 
   upload_assets:
-    name: Upload release assets (${{ matrix.arch }})
+    name: Upload release assets ( ${{ matrix.arch }} )
     needs: create_release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -178,28 +157,23 @@ jobs:
             extension: .exe
 
     steps:
-      - name: Download release context
-        uses: actions/download-artifact@v4
-        with:
-          name: release_context
-          path: ctx
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Restore release context
-        id: release_ctx
-        run: cat ctx/release_context
+      - name: Set release tag
+        run: echo GITHUB_RELEASE_TAG=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
 
       - name: Download binary
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.BINARY_NAME }}_${{ matrix.arch }}${{ matrix.extension}}
           path: assets_${{ matrix.arch }}
 
       - name: Upload release asset
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release_ctx.outputs.upload_url }}
-          asset_path: assets_${{ matrix.arch }}/${{ env.BINARY_NAME }}${{ matrix.extension }}
-          asset_name: ${{ env.BINARY_NAME }}_${{ steps.release_ctx.outputs.ref }}_${{ matrix.arch }}${{ matrix.extension}}
-          asset_content_type: application/octet-stream
+        run: |
+          cd assets_${{ matrix.arch }}
+          TAGGED_ASSET_NAME=${{ env.BINARY_NAME }}_${{ env.GITHUB_RELEASE_TAG }}_${{ matrix.arch }}${{ matrix.extension}}
+          mv ${{ env.BINARY_NAME }}${{ matrix.extension }} ${TAGGED_ASSET_NAME}
+          gh release upload ${{ env.GITHUB_RELEASE_TAG }} ${TAGGED_ASSET_NAME}
