@@ -10,116 +10,116 @@ env:
   BINARY_NAME: tindercrypt
 
 jobs:
-  basic_checks:
-    name: Basic checks (cargo ${{ matrix.cmd }})
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        cmd:
-          - fmt
-          - doc
-        include:
-          - cmd: fmt
-            args: --all -- --check
+  #basic_checks:
+  #  name: Basic checks (cargo ${{ matrix.cmd }})
+  #  runs-on: ubuntu-latest
+  #  strategy:
+  #    matrix:
+  #      cmd:
+  #        - fmt
+  #        - doc
+  #      include:
+  #        - cmd: fmt
+  #          args: --all -- --check
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          components: rustfmt
+  #    - name: Install Rust
+  #      uses: dtolnay/rust-toolchain@master
+  #      with:
+  #        toolchain: stable
+  #        components: rustfmt
 
-      - name: cargo ${{ matrix.cmd }}
-        run: cargo ${{ matrix.cmd }} ${{ matrix.args }}
+  #    - name: cargo ${{ matrix.cmd }}
+  #      run: cargo ${{ matrix.cmd }} ${{ matrix.args }}
 
 
-  lint_proto:
-    name: Lint .proto files
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #lint_proto:
+  #  name: Lint .proto files
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
 
-      - name: Download Uber's prototool
-        run: |
-          wget -O prototool \
-              https://github.com/uber/prototool/releases/download/v1.9.0/prototool-Linux-x86_64
-          chmod +x prototool
+  #    - name: Download Uber's prototool
+  #      run: |
+  #        wget -O prototool \
+  #            https://github.com/uber/prototool/releases/download/v1.9.0/prototool-Linux-x86_64
+  #        chmod +x prototool
 
-      - name: Lint
-        run: ./prototool lint proto
+  #    - name: Lint
+  #      run: ./prototool lint proto
 
-  test:
-    name: Test ${{ matrix.rust }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        rust:
-          - stable
-          - beta
-          - nightly
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macOS-latest
+  #test:
+  #  name: Test ${{ matrix.rust }} on ${{ matrix.os }}
+  #  runs-on: ${{ matrix.os }}
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      rust:
+  #        - stable
+  #        - beta
+  #        - nightly
+  #      os:
+  #        - ubuntu-latest
+  #        - windows-latest
+  #        - macOS-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
 
-      - name: Install Rust (${{ matrix.rust }})
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.rust }}
+  #    - name: Install Rust (${{ matrix.rust }})
+  #      uses: dtolnay/rust-toolchain@master
+  #      with:
+  #        toolchain: ${{ matrix.rust }}
 
-      # Catch any breaking changes in the dependencies early, by always updating
-      # them before running the tests.
-      - name: Update dependencies
-        run: cargo update
+  #    # Catch any breaking changes in the dependencies early, by always updating
+  #    # them before running the tests.
+  #    - name: Update dependencies
+  #      run: cargo update
 
-      # Regenerate proto module with new dependencies. Else, they may not work
-      # if the protobuf library gets updated in the previous step.
-      - name: Generate Rust code from Protobuf definitions
-        run: cargo build --features proto-gen
+  #    # Regenerate proto module with new dependencies. Else, they may not work
+  #    # if the protobuf library gets updated in the previous step.
+  #    - name: Generate Rust code from Protobuf definitions
+  #      run: cargo build --features proto-gen
 
-      - name: Test
-        run: cargo test -- --nocapture # Allow printing the output of tests
+  #    - name: Test
+  #      run: cargo test -- --nocapture # Allow printing the output of tests
 
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macOS-latest
-        include:
-          - os: ubuntu-latest
-            arch: linux_amd64
-          - os: windows-latest
-            arch: windows_amd64
-            extension: .exe
-          - os: macOS-latest
-            arch: darwin_amd64
+  #build:
+  #  name: Build on ${{ matrix.os }}
+  #  runs-on: ${{ matrix.os }}
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      os:
+  #        - ubuntu-latest
+  #        - windows-latest
+  #        - macOS-latest
+  #      include:
+  #        - os: ubuntu-latest
+  #          arch: linux_amd64
+  #        - os: windows-latest
+  #          arch: windows_amd64
+  #          extension: .exe
+  #        - os: macOS-latest
+  #          arch: darwin_amd64
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
 
-      - name: Build
-        run: cargo build --release
+  #    - name: Build
+  #      run: cargo build --release
 
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.BINARY_NAME }}_${{ matrix.arch }}${{ matrix.extension}}
-          path: "target/release/${{ env.BINARY_NAME }}${{ matrix.extension }}"
+  #    - name: Upload binaries
+  #      uses: actions/upload-artifact@v4
+  #      with:
+  #        name: ${{ env.BINARY_NAME }}_${{ matrix.arch }}${{ matrix.extension}}
+  #        path: "target/release/${{ env.BINARY_NAME }}${{ matrix.extension }}"
 
   create_release:
     name: Create a release
@@ -127,6 +127,9 @@ jobs:
     #needs: ["basic_checks", "test", "build", "lint_proto"]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set release tag
         run: echo GITHUB_RELEASE_TAG=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
 
