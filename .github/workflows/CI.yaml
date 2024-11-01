@@ -81,6 +81,11 @@ jobs:
       - name: Update dependencies
         run: cargo update
 
+      # Regenerate proto module with new dependencies. Else, they may not work
+      # if the protobuf library gets updated in the previous step.
+      - name: Generate Rust code from Protobuf definitions
+        run: cargo build --features proto-gen
+
       - name: Test
         run: cargo test -- --nocapture # Allow printing the output of tests
 
