@@ -7,6 +7,19 @@ Versioning].
 
 ## [Unreleased]
 
+## [0.3.3] - 2024-11-01
+
+### Fixed
+
+- Various fixes in order to make Tindercrypt work with the current stable Rust
+  version.
+
+### Changed
+
+- Update the `protobuf` dependency to 3.x, which brings some changes in the API
+  of the generated Rust code. Users of this library should not be affect, since
+  the Tindercrypt API has not changed.
+
 ## [0.3.2] - 2021-06-21
 
 ### Fixed
@@ -118,7 +131,8 @@ Initial release.
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 [#6]: https://github.com/apyrgio/tindercrypt/issues/6
 
-[Unreleased]: https://github.com/apyrgio/tindercrypt/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/apyrgio/tindercrypt/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/apyrgio/tindercrypt/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/apyrgio/tindercrypt/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/apyrgio/tindercrypt/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/apyrgio/tindercrypt/compare/v0.2.2...v0.3.0
