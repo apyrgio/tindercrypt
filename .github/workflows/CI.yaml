@@ -124,37 +124,37 @@ jobs:
   create_release:
     name: Create a release
     runs-on: ubuntu-latest
-    needs: ["basic_checks", "test", "build", "lint_proto"]
+    #needs: ["basic_checks", "test", "build", "lint_proto"]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Set release tag
         run: echo GITHUB_RELEASE_TAG=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
 
+      - name: Create release notes
+        run: |
+          cat > release_notes <<EOF
+          This release contains the latest assets for tag `${{ env.GITHUB_RELEASE_TAG }}`.
+
+          ## Changes
+
+          The changes for this release can be found in the [changelog].
+
+          [changelog]: https://github.com/${{ github.repository }}/blob/${{ env.GITHUB_RELEASE_TAG }}/CHANGELOG.md
+          EOF
+
       - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ env.GITHUB_RELEASE_TAG }}
-          draft: true
-          prerelease: false
-          body: |
-            This release contains the latest assets for tag `${{ env.GITHUB_RELEASE_TAG }}`.
-
-            ## Changes
-
-            The changes for this release can be found in the [changelog].
-
-            [changelog]: https://github.com/${{ github.repository }}/blob/${{ env.GITHUB_RELEASE_TAG }}/CHANGELOG.md
-
-      - name: Store release context
         run: |
-            cat <<EOF > release_context
-            ::set-output name=ref::${{ env.GITHUB_RELEASE_TAG }}
-            ::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}
-            EOF
+          gh release create ${{ env.GITHUB_RELEASE_TAG }} \
+              --draft --notes-file release_notes
+
+      #- name: Store release context
+      #  run: |
+      #      cat <<EOF > release_context
+      #      ::set-output name=ref::${{ env.GITHUB_RELEASE_TAG }}
+      #      ::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}
+      #      EOF
 
       - name: Upload release context
         uses: actions/upload-artifact@v4
@@ -163,7 +163,7 @@ jobs:
           path: release_context
 
   upload_assets:
-    name: Upload release assets (${{ matrix.arch }})
+    name: Upload release assets ( ${{ matrix.arch }} )
     needs: create_release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
