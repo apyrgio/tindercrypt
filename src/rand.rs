@@ -1,6 +1,6 @@
 //! # Utilities for random numbers
 
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 
 /// Fill a buffer with random data.
 ///
@@ -11,5 +11,5 @@ use rand::{thread_rng, Rng};
 /// fill_buf(&mut buf);
 /// ```
 pub fn fill_buf(buf: &mut [u8]) {
-    thread_rng().fill(buf);
+    rng().fill(buf);
 }

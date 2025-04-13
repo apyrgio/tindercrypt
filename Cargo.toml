@@ -17,7 +17,7 @@ categories = ["command-line-utilities", "cryptography"]
 
 [dependencies]
 protobuf = "3.7.2"
-rand = "0.8"
+rand = "0.9"
 # XXX: There are no stable versions of `ring` [1], meaning that we must always
 # compile the newest version to ensure that the latest security patches are
 # there. However, this means that our library may break whenever `ring` changes
@@ -26,7 +26,7 @@ rand = "0.8"
 #
 # [1]: https://github.com/briansmith/ring#versioning--stability
 ring = "0.17"
-thiserror = "1"
+thiserror = "2"
 zeroize = "1"
 
 # NOTE: The following dependencies are required only for the CLI version of the
@@ -34,7 +34,7 @@ zeroize = "1"
 # https://github.com/rust-lang/cargo/issues/1982, for the current state of
 # binary-only dependencies in `cargo`.
 clap = { version = "2", optional = true }
-dialoguer = { version = "0.8", optional = true }
+dialoguer = { version = "0.11", optional = true }
 lazy_static = { version = "1", optional = true }
 
 [dev-dependencies]

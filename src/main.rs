@@ -58,6 +58,10 @@ lazy_static! {
 
 #[derive(Debug)]
 enum CLIError {
+    DialogError {
+        msg: String,
+        dialog_error: dialoguer::Error,
+    },
     IOError {
         msg: String,
         io_error: io::Error,
@@ -72,10 +76,12 @@ enum CLIError {
 }
 
 impl CLIError {
+    fn from_dialog_error(msg: String, dialog_error: dialoguer::Error) -> Self {
+        CLIError::DialogError { msg, dialog_error }
+    }
     fn from_io_error(msg: String, io_error: io::Error) -> Self {
         CLIError::IOError { msg, io_error }
     }
-
     fn from_tc_error(msg: String, tc_error: errors::Error) -> Self {
         CLIError::TCError { msg, tc_error }
     }
@@ -87,6 +93,9 @@ impl CLIError {
 impl fmt::Display for CLIError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            CLIError::DialogError { msg, dialog_error } => {
+                write!(f, "{}.\nReason: {}", msg, dialog_error)
+            }
             CLIError::IOError { msg, io_error } => {
                 write!(f, "{}.\nReason: {}", msg, io_error)
             }
@@ -229,7 +238,7 @@ fn get_passphrase() -> Result<String, CLIError> {
 
     match pass {
         Ok(pass) => return Ok(pass),
-        Err(e) => Err(CLIError::from_io_error(
+        Err(e) => Err(CLIError::from_dialog_error(
             "Could not read passphrase from TTY".to_string(),
             e,
         )),
