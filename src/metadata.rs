@@ -82,7 +82,7 @@
 
 use crate::proto::metadata as pmeta;
 use crate::{errors, rand};
-use protobuf::Message;
+use prost::Message;
 
 /// The size of the nonces for the encryption algorithms provided by Ring.
 ///
@@ -153,27 +153,21 @@ impl HashFunction {
         proto_hash_fn: pmeta::HashFunction,
     ) -> Result<Self, errors::Error> {
         match proto_hash_fn {
-            pmeta::HashFunction::HASH_FUNCTION_INVALID => {
+            pmeta::HashFunction::Invalid => {
                 Err(errors::Error::MetadataInvalid)
             }
-            pmeta::HashFunction::HASH_FUNCTION_SHA256 => {
-                Ok(HashFunction::SHA256)
-            }
-            pmeta::HashFunction::HASH_FUNCTION_SHA384 => {
-                Ok(HashFunction::SHA384)
-            }
-            pmeta::HashFunction::HASH_FUNCTION_SHA512 => {
-                Ok(HashFunction::SHA512)
-            }
+            pmeta::HashFunction::Sha256 => Ok(HashFunction::SHA256),
+            pmeta::HashFunction::Sha384 => Ok(HashFunction::SHA384),
+            pmeta::HashFunction::Sha512 => Ok(HashFunction::SHA512),
         }
     }
 
     /// Convert a hash function to the respective protobuf-generated enum.
     pub fn to_proto(&self) -> pmeta::HashFunction {
         match self {
-            HashFunction::SHA256 => pmeta::HashFunction::HASH_FUNCTION_SHA256,
-            HashFunction::SHA384 => pmeta::HashFunction::HASH_FUNCTION_SHA384,
-            HashFunction::SHA512 => pmeta::HashFunction::HASH_FUNCTION_SHA512,
+            HashFunction::SHA256 => pmeta::HashFunction::Sha256,
+            HashFunction::SHA384 => pmeta::HashFunction::Sha384,
+            HashFunction::SHA512 => pmeta::HashFunction::Sha512,
         }
     }
 }
@@ -626,16 +620,16 @@ impl<'a> Metadata {
     /// If the buffer does not contain a metadata header or the header contains
     /// invalid fields, this method returns an error.
     pub fn from_buf(buf: &'a [u8]) -> Result<(Self, usize), errors::Error> {
-        let mut is = protobuf::CodedInputStream::from_bytes(&buf);
+        //let mut is = protobuf::CodedInputStream::from_bytes(&buf);
 
         // Check that the buffer header contains a valid protobuf Metadata
         // message.
-        let proto_meta = match is.read_message() {
+        let proto_meta = match pmeta::Metadata::try_from(&buf) {
             Ok(meta) => meta,
             Err(_) => return Err(errors::Error::MetadataMissing),
         };
 
-        let proto_meta_size = is.pos() as usize;
+        let proto_meta_size = proto_meta.encoded_len();
         let meta = Metadata::from_proto(&proto_meta)?;
         Ok((meta, proto_meta_size))
     }
@@ -674,8 +668,8 @@ mod tests {
     fn test_hash_function() {
         let err = Err(errors::Error::MetadataInvalid);
         let hash_fn = HashFunction::SHA256;
-        let proto_hash_fn = pmeta::HashFunction::HASH_FUNCTION_SHA256;
-        let inv_proto_hash_fn = pmeta::HashFunction::HASH_FUNCTION_INVALID;
+        let proto_hash_fn = pmeta::HashFunction::Sha256;
+        let inv_proto_hash_fn = pmeta::HashFunction::Invalid;
 
         assert_eq!(HashFunction::from_proto(inv_proto_hash_fn), err);
         assert_eq!(HashFunction::from_proto(proto_hash_fn), Ok(hash_fn));

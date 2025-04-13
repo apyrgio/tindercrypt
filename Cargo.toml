@@ -16,7 +16,7 @@ keywords = ["protocol-buffers", "cryptography", "encryption"]
 categories = ["command-line-utilities", "cryptography"]
 
 [dependencies]
-protobuf = "3"
+prost = "^0.13.5"
 rand = "0.8"
 # XXX: There are no stable versions of `ring` [1], meaning that we must always
 # compile the newest version to ensure that the latest security patches are
@@ -43,7 +43,7 @@ assert_fs = "1"
 predicates = "3"
 
 [build-dependencies]
-protobuf-codegen= { version = "3", optional = true }
+prost-build = { version = "^0.13.5", optional = true }
 
 [features]
 default = ["cli"]
@@ -51,4 +51,5 @@ default = ["cli"]
 # Dependencies needed specifically for the CLI.
 cli = ["clap", "dialoguer", "lazy_static"]
 # Generate Rust code from .proto files.
-proto-gen = ["protobuf-codegen"]
+proto-gen = ["prost-build"]
+prost-build = ["dep:prost-build"]
