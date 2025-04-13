@@ -16,7 +16,7 @@ keywords = ["protocol-buffers", "cryptography", "encryption"]
 categories = ["command-line-utilities", "cryptography"]
 
 [dependencies]
-protobuf = "3"
+protobuf = "3.7.2"
 rand = "0.8"
 # XXX: There are no stable versions of `ring` [1], meaning that we must always
 # compile the newest version to ensure that the latest security patches are
@@ -43,7 +43,7 @@ assert_fs = "1"
 predicates = "3"
 
 [build-dependencies]
-protobuf-codegen= { version = "3", optional = true }
+protobuf-codegen= { version = "3.7.2", optional = true }
 
 [features]
 default = ["cli"]
