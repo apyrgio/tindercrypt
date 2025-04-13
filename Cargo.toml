@@ -1,6 +1,6 @@
 [package]
 name = "tindercrypt"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Alex Pyrgiotis <apyrgio@gmail.com>"]
 edition = "2018"
 license = "MPL-2.0"

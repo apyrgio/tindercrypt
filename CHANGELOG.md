@@ -7,6 +7,13 @@ Versioning].
 
 ## [Unreleased]
 
+## [0.3.4] - 2025-04-13
+
+### Fixed
+
+- Pin the `protobuf` crate to 3.7.2, to avoid API incompatibilities in the
+  future (see [#10](https://github.com/apyrgio/tindercrypt/issues/10)).
+
 ## [0.3.3] - 2024-11-01
 
 ### Fixed
@@ -132,6 +139,7 @@ Initial release.
 [#6]: https://github.com/apyrgio/tindercrypt/issues/6
 
 [Unreleased]: https://github.com/apyrgio/tindercrypt/compare/v0.3.3...HEAD
+[0.3.4]: https://github.com/apyrgio/tindercrypt/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/apyrgio/tindercrypt/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/apyrgio/tindercrypt/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/apyrgio/tindercrypt/compare/v0.3.0...v0.3.1
